@@ -3,13 +3,21 @@
 // A todo has a `title` (a required string, trimmed) and `done` (a boolean, default `false`).
 
 import { model, Schema } from "mongoose";
+import type { HydratedDocument } from "mongoose";
 
-// The types `Todo` and `NewTodo` are already in `../types.ts`.
+import type { NewTodo, Todo } from "../types";
 
-export const todoSchema = new Schema({
-  id: String,
-  title: String,
-  done: Boolean,
+export const todoSchema = new Schema<NewTodo>({
+  title: { type: String, required: true, trim: true },
+  done: { type: Boolean, default: false },
 });
 
 export const todoModel = model("todos", todoSchema);
+
+export const toTodo = (todo: HydratedDocument<NewTodo>): Todo => {
+  return {
+    id: todo._id.toString(),
+    title: todo.title,
+    done: todo.done,
+  };
+};

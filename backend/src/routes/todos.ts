@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { todoModel, toTodo } from "../models/Todo";
 
 export const todosRouter = Router();
 
@@ -12,6 +13,6 @@ export const todosRouter = Router();
 // The contract is in docs/api-contract.md at the root of the project.
 
 todosRouter.get("/", async (request, response) => {
-    const result = await request.body
-    response.json("Hello")
-})
+  const todos = await todoModel.find();
+  response.json(todos.map(toTodo));
+});
