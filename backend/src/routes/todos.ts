@@ -10,3 +10,8 @@ export const todosRouter = Router();
 // DELETE /api/todos/:id   -> 204 without a body, 404 for an unknown id
 //
 // The contract is in docs/api-contract.md at the root of the project.
+
+todosRouter.get("/", async (request, response) => {
+    const result = await request.body
+    response.json("Hello")
+})
