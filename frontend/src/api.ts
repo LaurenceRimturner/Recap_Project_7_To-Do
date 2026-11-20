@@ -6,7 +6,7 @@ export const fetchTodos = async (): Promise<Todo[]> => {
   const response = await fetch(API_URL + "/todos");
 
   if (!response.ok) {
-    console.log("Loading Error");
+    throw new Error("Todos konnten nicht geladen werden");
   }
   return response.json();
 };
