@@ -11,9 +11,11 @@ Stack: Express 5 + MongoDB (`backend/`), React 19 + SWR (`frontend/`).
 | 5 | Edit a Todo | ✅ (PR #14 gemerged) |
 | 6 | Delete a Todo | ✅ (PR #15 gemerged) |
 | – | Design (Branch `design`) | 🟡 Code fertig, `check` und `build` laufen, Browser-Test offen |
-| 7 | Loading, Error and Empty States | 🟡 in Arbeit (siehe Stand im Abschnitt) |
+| 7 | Loading, Error and Empty States | 🟡 Code fertig, `check` grün, Browser-Tests mit DevTools "Offline" bestanden, PR offen |
 | 8 | Hand Over | ⬜ |
 | 9 | Bonus: Filter | ⬜ |
+
+Hinweis: Seit Issue 7 haben die Handler in `App.tsx` und `Form.tsx` ein `try/catch`. Die Code-Ausschnitte in Issue 3 bis 6 und 9 zeigen den Stand davor. Der aktuelle Code steht in Issue 7.
 
 Regeln aus `CLAUDE.md`: pro Issue ein Branch, nur das tun, was das Issue verlangt, alle API-Aufrufe in `frontend/src/api.ts`, `any` ist verboten, Routen rufen das Mongoose-Modell direkt auf.
 
@@ -466,27 +468,121 @@ Hinweise:
 
 Prüfen: Backend stoppen, Seite neu laden, Backend starten, "Try again" klicken. Danach ein Todo hinzufügen und das Backend vor dem Klick stoppen.
 
-**Stand (2026-11-23), Lösungscode kommt erst, wenn das Issue fertig ist:**
+### Lösung (nur Frontend)
 
-| Anforderung | Stand |
-|---|---|
-| "Try again" bei Ladefehler | ✅ im Browser geprüft |
-| Fehler bei Edit (Speichern), Delete (Edit-Modus), Checkbox anzeigen, Liste bleibt | ✅ in `App.tsx`, Type-Check grün, Browser-Test mit gestopptem Backend offen |
-| Fehler bei Add | ⬜ (`Form.tsx`) |
-| Text bleibt nach fehlgeschlagenem Speichern | ✅ beim Edit, ⬜ bei Add |
-| Leere Liste: freundlicher Hinweis | ⬜ |
-| "Add" während der Anfrage deaktiviert | ⬜ |
+`App.tsx`: `mutate` aus dem Hook unter eigenem Namen, ein State für Aktionsfehler.
 
-**Merke (bisher):**
+```tsx
+const { data, error, isLoading, mutate: retry } = useSWR(`todos`, fetchTodos);
+const [errMsg, setErrMsg] = useState("");
+```
+
+Ladefehler ersetzt die Seite, mit "Try again":
+
+```tsx
+if (error)
+  return (
+    <main>
+      <div className="alert alert-danger" role="alert">
+        failed to load
+        <button
+          className="btn btn-sm btn-outline-secondary"
+          onClick={() => retry()}
+        >
+          Try again
+        </button>
+      </div>
+    </main>
+  );
+```
+
+Aktionsfehler steht im Haupt-`return`, die Liste bleibt sichtbar. Leere Liste mit Hinweis:
+
+```tsx
+{errMsg !== "" && (
+  <div className="alert alert-danger" role="alert">
+    <p className="status-line">{errMsg}</p>
+  </div>
+)}
+<Form title={title} setTitle={setTitle} setErrMsg={setErrMsg} />
+{data.length === 0 && (
+  <p className="status-line">
+    Noch keine Todos. Erstelle doch eins =^w^=
+  </p>
+)}
+```
+
+Delete-Button im Edit-Modus (Edit/Speichern und Checkbox haben dasselbe Muster):
+
+```tsx
+onClick={async () => {
+  try {
+    await deleteTodo(todo.id);
+    await mutate("todos");
+    setErrMsg("");
+  } catch {
+    setErrMsg(
+      "Todo konnte nicht gelöscht werden. Bitte nochmal versuchen."
+    );
+  }
+}}
+```
+
+`types.ts`: `Form` bekommt `setErrMsg` als Prop.
+
+```ts
+export type FormProps = {
+  title: string;
+  setTitle: (title: string) => void;
+  setErrMsg: (title: string) => void;
+};
+```
+
+`Form.tsx`: State `submitting`, `finally` gibt den Button wieder frei.
+
+```tsx
+const [submitting, setSubmitting] = useState(false);
+
+async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  try {
+    setSubmitting(true);
+    await createTodo(title);
+    await mutate("todos");
+    setTitle("");
+    setErrMsg("");
+  } catch {
+    setErrMsg(
+      "Todo konnte nicht hinzugefügt werden. Bitte nochmal versuchen."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+}
+```
+
+```tsx
+disabled={title.trim() === "" || submitting === true}
+```
+
+**Merke:**
 - `useSWR` gibt ein eigenes `mutate` zurück. Beim Destructuring mit `mutate: neuerName` umbenennen, weil das globale `mutate` aus dem Import sonst verdeckt wird.
 - Ladefehler und Aktionsfehler sind zwei Dinge. Ein Ladefehler ersetzt die Seite (früher `return`), ein Aktionsfehler ist ein State und steht im Haupt-`return`, damit die Liste sichtbar bleibt.
 - Ein `catch` ohne Variable reicht, wenn man einen eigenen Text zeigt. Rohe Fehlertexte (`Failed to fetch`) sind für Nutzer nutzlos.
 - Eine gute Meldung sagt, was passiert ist und was man tun kann, und passt zur Aktion.
 - `setErrMsg("")` gehört in den Erfolgsfall, sonst bleibt die alte Meldung stehen.
-- `setCurrEditTodo(null)` steht nach `await editTodo` im `try`: Bei einem Fehler wird es nie erreicht, der Edit-Modus und der getippte Text bleiben.
+- `setCurrEditTodo(null)` steht nach `await editTodo` im `try`: Bei einem Fehler wird es nie erreicht, der Edit-Modus und der getippte Text bleiben. Bei Add gilt dasselbe für `setTitle("")`.
+- `setSubmitting(false)` gehört in `finally`, nicht ans Ende vom `try`. Sonst bleibt der Button nach einem Fehler gesperrt.
+- SWR lädt beim Zurückkehren ins Browser-Fenster neu (`revalidateOnFocus`). Stoppt man das Backend im Terminal, schlägt dieser Reload fehl und der Ladefehler ersetzt die Seite. Aktionsfehler testet man deshalb mit DevTools, Network, "Offline".
+
+### Fehler, die uns passiert sind
 
 | Fehler | Richtig |
 |---|---|
+| Aktionsfehler testen, indem man das Backend im Terminal stoppt | Der Fokus-Reload zeigt den Ladefehler. DevTools, Network, "Offline" nutzen |
+| Text "gefetcht" bei Add | Meldung beschreibt die Aktion: "hinzugefügt" |
+| `setErrMsg("")` im Erfolgsfall vergessen | Bei jedem Handler im `try` setzen, sonst bleibt die alte Meldung |
+| `errMsg` als unnötige Prop an `Form` | `Form` setzt die Meldung nur, die Anzeige bleibt in `App.tsx` |
 | `setErrMsg(instanceof Error.message)` | `instanceof` braucht links einen Wert: `fehler instanceof Error` |
 | `setErrMsg(err.message)` außerhalb des `if (err instanceof Error)` | Die Typprüfung gilt nur innerhalb des `if`-Blocks. Mit eigenem Text ist sie unnötig |
 | Meldung als frühes `return` oben | Das ersetzt die ganze Seite. Die Meldung gehört in den Haupt-`return` |
