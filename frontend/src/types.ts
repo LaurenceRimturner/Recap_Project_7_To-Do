@@ -8,3 +8,8 @@ export type NewTodo = {
   title: string;
   done: boolean;
 };
+
+export type FormProps = {
+  title: string;
+  setTitle: (title: string) => void;
+};

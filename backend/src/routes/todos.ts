@@ -16,3 +16,8 @@ todosRouter.get("/", async (request, response) => {
   const todos = await todoModel.find();
   response.json(todos.map(toTodo));
 });
+
+todosRouter.post("/", async (request, response) => {
+  const newTodo = await todoModel.create(request.body);
+  response.status(201).json(toTodo(newTodo));
+});
