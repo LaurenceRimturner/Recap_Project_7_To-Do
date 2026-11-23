@@ -5,7 +5,7 @@ import Form from "./components/Form/Form";
 import { SquarePen, Trash, Save, X } from "lucide-react";
 
 export default function App() {
-  const { data, error, isLoading } = useSWR(`todos`, fetchTodos);
+  const { data, error, isLoading, mutate } = useSWR(`todos`, fetchTodos);
   const [title, setTitle] = useState("");
   const [currEditTodo, setCurrEditTodo] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
@@ -21,6 +21,7 @@ export default function App() {
       <main>
         <div className="alert alert-danger" role="alert">
           failed to load
+          <button onClick={() => mutate()}>Try again</button>
         </div>
       </main>
     );
@@ -29,6 +30,7 @@ export default function App() {
       <main>
         <div className="alert alert-danger" role="alert">
           an error has occurred
+          <button onClick={() => mutate()}>Try again</button>
         </div>
       </main>
     );

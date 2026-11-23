@@ -3,7 +3,7 @@ import type { Todo } from "./types";
 // Put all functions that talk to the API here (fetcher for `useSWR`, create, update, delete),
 // so that your components never call `fetch` themselves.
 
-export const API_URL = "http://localhost:3001/api";
+export const API_URL = "http://localhost:3a001/api";
 export const fetchTodos = async (): Promise<Todo[]> => {
   const response = await fetch(API_URL + "/todos");
   if (!response.ok) {
