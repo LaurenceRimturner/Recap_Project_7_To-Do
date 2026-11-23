@@ -11,5 +11,5 @@ export type NewTodo = {
 
 export type FormProps = {
   title: string;
-  isTitel: (title: string) => void;
+  setTitle: (title: string) => void;
 };
