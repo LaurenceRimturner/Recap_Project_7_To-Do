@@ -567,9 +567,12 @@ Gestaltungsregeln:
 Anlehnung an das UI von Cyberpunk 2077:
 - Schwarz als Grund, Gelb (`#fcee09`) als Markenfarbe, Cyan (`#02d7f2`) für Zweitaktionen und Nummern, Rot (`#ff003c`) für Löschen und Fehler.
 - Die Kopfzeile ist ein gelber Balken mit schwarzer Schrift, in Großbuchstaben und weit gesperrt.
-- Alle Flächen (Kopfzeile, Zeilen, Buttons) haben zwei abgeschnittene Ecken, oben links und unten rechts. Das macht `clip-path: polygon(...)` mit der Variable `--cut`.
+- Alle Flächen (Kopfzeile, Karten, Buttons) haben zwei abgeschnittene Ecken, oben links und unten rechts. Das macht `clip-path: polygon(...)` mit der Variable `--cut`.
 - Buttons sind gefüllt und haben keinen Rahmen. Hover und Fokus füllen sie mit der Akzentfarbe.
 - Das Eingabefeld hat eine linke Kante in Cyan, die beim Fokus gelb wird.
+- Die Karte ist die Checkbox. Das `<input type="checkbox">` bleibt im Markup (Klasse `visually-hidden`), damit Tastatur und Screenreader funktionieren. Das `::after` des Labels spannt sich mit `position: absolute; inset: 0` über die ganze Karte (Elternelement hat `position: relative`), ein Klick irgendwo auf der Karte schaltet um. Die Buttons haben `position: relative; z-index: 1`, sonst liegt das Label darüber.
+- Erledigt: rote linke Kante und ein rotes Kreuz über die ganze Karte. Das Kreuz sind zwei `linear-gradient`s (`to top right` und `to bottom right`) als `background-image`, ausgelöst mit `:has(.todo-title.done)`.
+- Fokus per Tastatur: `:has(input:focus-visible)` zeichnet einen gelben Innenrahmen. Ein normaler `outline` würde von `clip-path` abgeschnitten.
 - Jede Zeile hat eine Nummer, ohne extra Markup: `counter-reset` an der Liste, `counter-increment` und `::before` am Eintrag.
 - Ein blinkender Cursor `_` steht bei Lade- und Leer-Zustand (aus bei `prefers-reduced-motion`).
 - Kein Raster, kein Glow, keine Schatten.
@@ -582,8 +585,10 @@ Die alten globalen Regeln für `button` und `input` sind weg, sie kollidieren mi
 
 ```tsx
 <ul className="todo-list list-group">
-  <li className="todo-item list-group-item d-flex align-items-center gap-2" key={todo.id}>
+  <li className="todo-item list-group-item d-flex flex-column gap-3" key={todo.id}>
 ```
+
+Die Liste ist ein CSS-Grid mit drei Karten pro Reihe (`grid-template-columns: repeat(3, 1fr)`). Unter 768px sind es zwei, unter 480px eine Spalte. Die Buttons einer Karte stehen in `<div className="todo-actions">`, `margin-top: auto` schiebt sie nach unten.
 
 ```tsx
 <button

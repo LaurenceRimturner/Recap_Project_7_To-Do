@@ -44,7 +44,7 @@ export default function App() {
       <ul className="todo-list list-group">
         {data.map((todo) => (
           <li
-            className="todo-item list-group-item d-flex align-items-center gap-2"
+            className="todo-item list-group-item d-flex flex-column gap-3"
             key={todo.id}
           >
             {currEditTodo === todo.id && (
@@ -74,7 +74,7 @@ export default function App() {
                 >
                   <input
                     type="checkbox"
-                    className="form-check-input mt-0"
+                    className="visually-hidden"
                     onChange={async () => {
                       await editTodo(todo.id, todo.title, !todo.done);
                       await mutate("todos");
@@ -83,31 +83,33 @@ export default function App() {
                   />
                   {todo.title}
                 </label>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-secondary"
-                  aria-label={`edit todo: ${todo.title}`}
-                  onClick={() => {
-                    setCurrEditTodo(todo.id);
-                    setEditTitle(todo.title);
-                  }}
-                >
-                  <SquarePen size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-danger"
-                  aria-label={`delete todo: ${todo.title}`}
-                  onClick={async () => {
-                    await deleteTodo(todo.id);
-                    await mutate("todos");
-                  }}
-                >
-                  <Trash size={16} />
-                </button>
+                <div className="todo-actions">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    aria-label={`edit todo: ${todo.title}`}
+                    onClick={() => {
+                      setCurrEditTodo(todo.id);
+                      setEditTitle(todo.title);
+                    }}
+                  >
+                    <SquarePen size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    aria-label={`delete todo: ${todo.title}`}
+                    onClick={async () => {
+                      await deleteTodo(todo.id);
+                      await mutate("todos");
+                    }}
+                  >
+                    <Trash size={16} />
+                  </button>
+                </div>
               </>
             ) : (
-              <>
+              <div className="todo-actions">
                 <button
                   type="button"
                   className="btn btn-sm btn-accent"
@@ -144,7 +146,7 @@ export default function App() {
                 >
                   <Trash size={16} />
                 </button>
-              </>
+              </div>
             )}
           </li>
         ))}

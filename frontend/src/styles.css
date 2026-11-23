@@ -25,7 +25,7 @@
 }
 
 main {
-  max-width: 36rem;
+  max-width: 56rem;
   margin: 3rem auto;
   padding: 0 1rem;
 }
@@ -168,15 +168,38 @@ h1 {
   --bs-btn-active-color: var(--ui-bg);
 }
 
-/* List: numbered rows with a yellow edge */
+/* List: numbered cards, three per row, with a yellow edge */
 .todo-list {
   counter-reset: row;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   border-radius: 0;
 }
 
+@media (max-width: 767px) {
+  .todo-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 479px) {
+  .todo-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.todo-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: auto;
+}
+
 .todo-item {
+  position: relative;
   counter-increment: row;
+  min-height: 8.5rem;
   background-color: var(--ui-panel);
   border: 0;
   border-left: 3px solid var(--ui-yellow);
@@ -203,41 +226,50 @@ h1 {
   font-size: 0.75rem;
 }
 
-.todo-item:has(.todo-title.done) {
-  border-left-color: var(--ui-line);
-}
-
-.todo-item:has(.todo-title.done)::before {
-  color: var(--ui-dim);
-}
-
+/* The card is the checkbox: the label's ::after stretches over the whole card,
+   the real input stays in the DOM (visually hidden) for keyboard and screen readers. */
 .todo-title {
   flex: 1;
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  align-items: flex-start;
   cursor: pointer;
   overflow-wrap: anywhere;
 }
 
+.todo-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.todo-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.todo-item:has(input:focus-visible) {
+  box-shadow: inset 0 0 0 2px var(--ui-yellow);
+}
+
+/* Done: red edge and a red cross through the card */
+.todo-item:has(.todo-title.done) {
+  border-left-color: var(--ui-red);
+  background-image:
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 1px),
+      rgba(255, 0, 60, 0.45) 50%,
+      transparent calc(50% + 1px)
+    ),
+    linear-gradient(
+      to bottom right,
+      transparent calc(50% - 1px),
+      rgba(255, 0, 60, 0.45) 50%,
+      transparent calc(50% + 1px)
+    );
+}
+
+.todo-item:has(.todo-title.done)::before,
 .todo-title.done {
-  text-decoration: line-through;
   color: var(--ui-dim);
-}
-
-.form-check-input {
-  background-color: transparent;
-  border: 1px solid var(--ui-dim);
-  border-radius: 0;
-}
-
-.form-check-input:checked {
-  background-color: var(--ui-yellow);
-  border-color: var(--ui-yellow);
-  --bs-form-check-bg-image: none;
-}
-
-.form-check-input:focus {
-  border-color: var(--ui-yellow);
-  box-shadow: none;
 }
