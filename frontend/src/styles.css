@@ -1,83 +1,282 @@
-* {
-  box-sizing: border-box;
+/* Cyberpunk 2077 UI: black, signature yellow, cyan for secondary, red for danger.
+   Every control has two chamfered corners (top-left, bottom-right). */
+:root {
+  --ui-bg: #050505;
+  --ui-panel: #111112;
+  --ui-panel-hover: #1a1a1c;
+  --ui-line: #2b2b2e;
+  --ui-text: #f2f2ee;
+  --ui-dim: #6f6f74;
+  --ui-yellow: #fcee09;
+  --ui-cyan: #02d7f2;
+  --ui-red: #ff003c;
+  --cut: 8px;
 }
 
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #f4f4f5;
-  color: #18181b;
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--ui-bg);
+  --bs-body-color: var(--ui-text);
+  --bs-body-font-family: "JetBrains Mono", ui-monospace, monospace;
+  --bs-body-font-size: 0.875rem;
+  --bs-border-color: var(--ui-line);
+  --bs-border-radius: 0;
+  --bs-border-radius-sm: 0;
+  --bs-secondary-color: var(--ui-dim);
 }
 
 main {
-  max-width: 32rem;
-  margin: 2rem auto;
+  max-width: 56rem;
+  margin: 3rem auto;
   padding: 0 1rem;
 }
 
-.todo-form {
+/* Header: solid yellow bar, black type, count on the right */
+h1 {
   display: flex;
-  gap: 0.5rem;
-  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--ui-yellow);
+  color: var(--ui-bg);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
 }
 
-.todo-form input {
-  flex: 1;
+.count {
+  font-weight: 400;
+  letter-spacing: 0.1em;
 }
 
-input:not([type="checkbox"]) {
-  padding: 0.5rem;
-  border: 1px solid #a1a1aa;
-  border-radius: 0.25rem;
+.status-line {
+  color: var(--ui-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
 }
 
-button {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #a1a1aa;
-  border-radius: 0.25rem;
-  background: white;
-  cursor: pointer;
+.status-line::after {
+  content: "_";
+  animation: blink 1s steps(1) infinite;
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .status-line::after {
+    animation: none;
+  }
+}
+
+.alert {
+  border: 0;
+  border-left: 3px solid var(--ui-red);
+  background-color: var(--ui-panel);
+  color: var(--ui-red);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 0;
+}
+
+/* Input: dark field, cyan edge, yellow when active */
+.form-control {
+  background-color: var(--ui-panel);
+  border: 0;
+  border-left: 3px solid var(--ui-cyan);
+  border-radius: 0;
+  color: var(--ui-text);
+}
+
+.form-control::placeholder {
+  color: var(--ui-dim);
+  letter-spacing: 0.15em;
+}
+
+.form-control:focus {
+  background-color: var(--ui-panel-hover);
+  color: var(--ui-text);
+  border-left-color: var(--ui-yellow);
+  box-shadow: none;
+  outline: 0;
+}
+
+/* Buttons: filled, no outline, chamfered */
+.btn {
+  --bs-btn-color: var(--ui-cyan);
+  --bs-btn-bg: var(--ui-panel-hover);
+  --bs-btn-border-width: 0;
+  --bs-btn-border-radius: 0;
+  --bs-btn-hover-bg: var(--ui-cyan);
+  --bs-btn-hover-color: var(--ui-bg);
+  --bs-btn-active-bg: var(--ui-cyan);
+  --bs-btn-active-color: var(--ui-bg);
+  --bs-btn-disabled-bg: var(--ui-panel);
+  --bs-btn-disabled-color: var(--ui-dim);
+  border-radius: 0;
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+}
+
+.btn:focus-visible {
+  outline: 0;
+  box-shadow: none;
+  background-color: var(--ui-text);
+  color: var(--ui-bg);
+}
+
+.btn-accent {
+  --bs-btn-color: var(--ui-bg);
+  --bs-btn-bg: var(--ui-yellow);
+  --bs-btn-hover-bg: var(--ui-text);
+  --bs-btn-hover-color: var(--ui-bg);
+  --bs-btn-active-bg: var(--ui-text);
+  --bs-btn-active-color: var(--ui-bg);
+  --bs-btn-disabled-bg: var(--ui-panel);
+  --bs-btn-disabled-color: var(--ui-dim);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--ui-dim);
+  --bs-btn-hover-bg: var(--ui-cyan);
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--ui-red);
+  --bs-btn-hover-bg: var(--ui-red);
+  --bs-btn-hover-color: var(--ui-bg);
+  --bs-btn-active-bg: var(--ui-red);
+  --bs-btn-active-color: var(--ui-bg);
+}
+
+/* List: numbered cards, three per row, with a yellow edge */
 .todo-list {
-  list-style: none;
-  padding: 0;
+  counter-reset: row;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  border-radius: 0;
+}
+
+@media (max-width: 767px) {
+  .todo-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 479px) {
+  .todo-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.todo-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: auto;
 }
 
 .todo-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #d4d4d8;
+  position: relative;
+  counter-increment: row;
+  min-height: 8.5rem;
+  background-color: var(--ui-panel);
+  border: 0;
+  border-left: 3px solid var(--ui-yellow);
+  border-radius: 0;
+  padding: 0.875rem 1rem;
+  transition: background-color 0.15s;
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
 }
 
+.todo-item:hover {
+  background-color: var(--ui-panel-hover);
+}
+
+.todo-item::before {
+  content: counter(row, decimal-leading-zero);
+  color: var(--ui-cyan);
+  font-size: 0.6875rem;
+  letter-spacing: 0.15em;
+}
+
+/* The card is the checkbox: the label's ::after stretches over the whole card,
+   the real input stays in the DOM (visually hidden) for keyboard and screen readers. */
+/* Title is the focus of the card: large, bright, tight leading */
 .todo-title {
   flex: 1;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
 }
 
-.todo-title.done {
-  text-decoration: line-through;
-  color: #71717a;
-}
-
-[role="alert"] {
-  color: #b91c1c;
-}
-
-.visually-hidden {
+.todo-title::after {
+  content: "";
   position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+  inset: 0;
+}
+
+.todo-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.todo-item:has(input:focus-visible) {
+  box-shadow: inset 0 0 0 2px var(--ui-yellow);
+}
+
+/* Done: red edge and a red cross through the card */
+.todo-item:has(.todo-title.done) {
+  border-left-color: var(--ui-red);
+  background-image:
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 1px),
+      rgba(255, 0, 60, 0.3) 50%,
+      transparent calc(50% + 1px)
+    ),
+    linear-gradient(
+      to bottom right,
+      transparent calc(50% - 1px),
+      rgba(255, 0, 60, 0.3) 50%,
+      transparent calc(50% + 1px)
+    );
+}
+
+.todo-item:has(.todo-title.done)::before,
+.todo-title.done {
+  color: var(--ui-dim);
 }
