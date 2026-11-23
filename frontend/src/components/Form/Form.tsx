@@ -2,16 +2,25 @@ import type { FormProps } from "../../types";
 import { createTodo } from "../../api";
 import { mutate } from "swr";
 import { Plus } from "lucide-react";
+import { useState } from "react";
+
 export default function Form({ title, setTitle, setErrMsg }: FormProps) {
+  const [submitting, setSubmitting] = useState(false);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     try {
+      setSubmitting(true);
       await createTodo(title);
       await mutate("todos");
       setTitle("");
       setErrMsg("");
     } catch {
-      setErrMsg("Todo konnte nicht hinzugefügt werden. Bitte nochmal versuchen.");
+      setErrMsg(
+        "Todo konnte nicht hinzugefügt werden. Bitte nochmal versuchen."
+      );
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -29,7 +38,7 @@ export default function Form({ title, setTitle, setErrMsg }: FormProps) {
       <button
         className="btn btn-accent"
         aria-label="add todo"
-        disabled={title.trim() === ""}
+        disabled={title.trim() === "" || submitting === true}
         type="submit"
       >
         <Plus size={18} />
