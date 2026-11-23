@@ -2,6 +2,7 @@ import useSWR, { mutate } from "swr";
 import { editTodo, fetchTodos } from "./api";
 import { useState } from "react";
 import Form from "./components/Form/Form";
+import { SquarePen, Trash } from "lucide-react";
 
 export default function App() {
   const { data, error, isLoading } = useSWR(`todos`, fetchTodos);
@@ -30,6 +31,12 @@ export default function App() {
               />
               {todo.title}
             </label>
+            <button>
+              <SquarePen size={16} />
+            </button>
+            {/* <button>
+              <Trash size={16} color="red" />
+            </button> */}
           </li>
         ))}
       </ul>

@@ -29,11 +29,11 @@ todosRouter.put("/:id", async (request, response) => {
     request.body as NewTodo,
     {
       returnDocument: "after",
-      runValidators: true
+      runValidators: true,
     }
   );
   if (!editTodo) {
-   return response.status(404).json({ error: "Todo nicht gefunden" });
+    return response.status(404).json({ error: "Todo nicht gefunden" });
   }
 
   response.status(200).json(toTodo(editTodo));
