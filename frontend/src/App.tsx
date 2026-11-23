@@ -2,7 +2,7 @@ import useSWR, { mutate } from "swr";
 import { editTodo, fetchTodos } from "./api";
 import { useState } from "react";
 import Form from "./components/Form/Form";
-import { SquarePen, Trash, Save } from "lucide-react";
+import { SquarePen, Trash, Save, X } from "lucide-react";
 
 export default function App() {
   const { data, error, isLoading } = useSWR(`todos`, fetchTodos);
@@ -23,13 +23,16 @@ export default function App() {
         {data.map((todo) => (
           <li className="todo-item" key={todo.id}>
             {currEditTodo === todo.id && (
-              <input
-                type="text"
-                value={editTitle}
-                onChange={(e) => {
-                  setEditTitle(e.target.value);
-                }}
-              />
+              <>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => {
+                    setEditTitle(e.target.value);
+                  }}
+                />
+                {editTitle.trim() === "" && <p>Gültige Aufgabe einfügen.</p>}
+              </>
             )}
             {currEditTodo !== todo.id ? (
               <>
@@ -55,20 +58,29 @@ export default function App() {
                 </button>
               </>
             ) : (
-              <button
-                aria-label={`save todo: ${todo.title}`}
-                onClick={async () => {
-                  if (editTitle.trim() === "") {
-                    
-                    return;
-                  }
-                  await editTodo(todo.id, editTitle, todo.done);
-                  await mutate("todos");
-                  setCurrEditTodo(null);
-                }}
-              >
-                <Save size={16} />
-              </button>
+              <>
+                <button
+                  aria-label={`save todo: ${todo.title}`}
+                  onClick={async () => {
+                    if (editTitle.trim() === "") {
+                      return;
+                    }
+                    await editTodo(todo.id, editTitle, todo.done);
+                    await mutate("todos");
+                    setCurrEditTodo(null);
+                  }}
+                >
+                  <Save size={16} />
+                </button>
+                <button
+                  aria-label={`cancel todo changes on ${todo.title}`}
+                  onClick={() => {
+                    setCurrEditTodo(null);
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              </>
             )}
             {/* <button aria-label={`delete todo: ${todo.title}`}>
               <Trash size={16} color="red" />

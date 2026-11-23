@@ -33,7 +33,7 @@ todosRouter.put("/:id", async (request, response) => {
     }
   );
   if (!editTodo) {
-    return response.status(404).json({ error: "Todo nicht gefunden" });
+    return response.status(404).json({ error: "Todo not found" });
   }
 
   response.status(200).json(toTodo(editTodo));
