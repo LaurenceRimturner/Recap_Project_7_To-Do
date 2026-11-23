@@ -1,5 +1,5 @@
-import useSWR from "swr";
-import { fetchTodos } from "./api";
+import useSWR, { mutate } from "swr";
+import { editTodo, fetchTodos } from "./api";
 import { useState } from "react";
 import Form from "./components/Form/Form";
 
@@ -20,7 +20,14 @@ export default function App() {
         {data.map((todo) => (
           <li className="todo-item" key={todo.id}>
             <label className={`todo-title ${todo.done ? "done" : ""}`}>
-              <input type="checkbox" checked={todo.done} readOnly />
+              <input
+                type="checkbox"
+                onChange={async () => {
+                  await editTodo(todo.id, todo.title, !todo.done);
+                  await mutate("todos");
+                }}
+                checked={todo.done}
+              />
               {todo.title}
             </label>
           </li>

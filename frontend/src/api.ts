@@ -23,11 +23,15 @@ export const createTodo = async (title: string): Promise<Todo> => {
   }
   return response.json();
 };
-export const editTodo = async (title: string): Promise<Todo> => {
-  const response = await fetch(API_URL + "/todos/<id>", {
+export const editTodo = async (
+  id: string,
+  title: string,
+  done: boolean
+): Promise<Todo> => {
+  const response = await fetch(`${API_URL}/todos/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, done: false }),
+    body: JSON.stringify({ title, done }),
   });
   if (!response.ok) {
     throw new Error("Todo konnte nicht bearbeitet werden");
