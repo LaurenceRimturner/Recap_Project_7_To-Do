@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { todoModel, toTodo } from "../models/Todo";
+import { NewTodo } from "../types";
 
 export const todosRouter = Router();
 
@@ -20,4 +21,20 @@ todosRouter.get("/", async (request, response) => {
 todosRouter.post("/", async (request, response) => {
   const newTodo = await todoModel.create(request.body);
   response.status(201).json(toTodo(newTodo));
+});
+
+todosRouter.put("/:id", async (request, response) => {
+  const editTodo = await todoModel.findByIdAndUpdate(
+    request.params.id,
+    request.body as NewTodo,
+    {
+      returnDocument: "after",
+      runValidators: true
+    }
+  );
+  if (!editTodo) {
+   return response.status(404).json({ error: "Todo nicht gefunden" });
+  }
+
+  response.status(200).json(toTodo(editTodo));
 });
