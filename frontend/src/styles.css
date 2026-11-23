@@ -204,7 +204,7 @@ h1 {
   border: 0;
   border-left: 3px solid var(--ui-yellow);
   border-radius: 0;
-  padding: 0.625rem 0.75rem;
+  padding: 0.875rem 1rem;
   transition: background-color 0.15s;
   clip-path: polygon(
     var(--cut) 0,
@@ -223,17 +223,24 @@ h1 {
 .todo-item::before {
   content: counter(row, decimal-leading-zero);
   color: var(--ui-cyan);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.15em;
 }
 
 /* The card is the checkbox: the label's ::after stretches over the whole card,
    the real input stays in the DOM (visually hidden) for keyboard and screen readers. */
+/* Title is the focus of the card: large, bright, tight leading */
 .todo-title {
   flex: 1;
   display: flex;
   align-items: flex-start;
   cursor: pointer;
   overflow-wrap: anywhere;
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
 }
 
 .todo-title::after {
@@ -258,13 +265,13 @@ h1 {
     linear-gradient(
       to top right,
       transparent calc(50% - 1px),
-      rgba(255, 0, 60, 0.45) 50%,
+      rgba(255, 0, 60, 0.3) 50%,
       transparent calc(50% + 1px)
     ),
     linear-gradient(
       to bottom right,
       transparent calc(50% - 1px),
-      rgba(255, 0, 60, 0.45) 50%,
+      rgba(255, 0, 60, 0.3) 50%,
       transparent calc(50% + 1px)
     );
 }

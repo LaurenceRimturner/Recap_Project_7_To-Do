@@ -571,6 +571,7 @@ Anlehnung an das UI von Cyberpunk 2077:
 - Buttons sind gefüllt und haben keinen Rahmen. Hover und Fokus füllen sie mit der Akzentfarbe.
 - Das Eingabefeld hat eine linke Kante in Cyan, die beim Fokus gelb wird.
 - Die Karte ist die Checkbox. Das `<input type="checkbox">` bleibt im Markup (Klasse `visually-hidden`), damit Tastatur und Screenreader funktionieren. Das `::after` des Labels spannt sich mit `position: absolute; inset: 0` über die ganze Karte (Elternelement hat `position: relative`), ein Klick irgendwo auf der Karte schaltet um. Die Buttons haben `position: relative; z-index: 1`, sonst liegt das Label darüber.
+- Lesbarkeit: Der Titel ist das Wichtigste der Karte. Er ist weiß, fett und 1.125rem groß (`line-height: 1.35`). Die Nummer ist kleiner und gesperrt, die Karte hat mehr Innenabstand (`0.875rem 1rem`). Das Kreuz ist mit 30 % Deckkraft so blass, dass es den Text nicht stört.
 - Erledigt: rote linke Kante und ein rotes Kreuz über die ganze Karte. Das Kreuz sind zwei `linear-gradient`s (`to top right` und `to bottom right`) als `background-image`, ausgelöst mit `:has(.todo-title.done)`.
 - Fokus per Tastatur: `:has(input:focus-visible)` zeichnet einen gelben Innenrahmen. Ein normaler `outline` würde von `clip-path` abgeschnitten.
 - Jede Zeile hat eine Nummer, ohne extra Markup: `counter-reset` an der Liste, `counter-increment` und `::before` am Eintrag.
