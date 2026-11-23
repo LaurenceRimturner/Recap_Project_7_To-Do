@@ -56,16 +56,20 @@ export default function App() {
               </>
             ) : (
               <button
-                aria-label={`edit todo: ${todo.title}`}
-                onClick={() => {
-                  setCurrEditTodo(todo.id);
-                  setEditTitle(todo.title);
+                aria-label={`save todo: ${todo.title}`}
+                onClick={async () => {
+                  if (editTitle.trim() === "") {
+                    
+                    return;
+                  }
+                  await editTodo(todo.id, editTitle, todo.done);
+                  await mutate("todos");
+                  setCurrEditTodo(null);
                 }}
               >
                 <Save size={16} />
               </button>
             )}
-
             {/* <button aria-label={`delete todo: ${todo.title}`}>
               <Trash size={16} color="red" />
             </button> */}
