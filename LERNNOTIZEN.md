@@ -9,7 +9,8 @@ Stack: Express 5 + MongoDB (`backend/`), React 19 + SWR (`frontend/`).
 | 3 | Add a Todo | ✅ |
 | 4 | Mark a Todo as Done | ✅ |
 | 5 | Edit a Todo | ✅ (PR #14 gemerged) |
-| 6 | Delete a Todo | 🟡 getestet, noch nicht gemerged (Button nur im Edit-Modus) |
+| 6 | Delete a Todo | ✅ (PR #15 gemerged) |
+| – | Design (Branch `design`) | 🟡 Code fertig, `check` und `build` laufen, Browser-Test offen |
 | 7 | Loading, Error and Empty States | ⬜ |
 | 8 | Hand Over | ⬜ |
 | 9 | Bonus: Filter | ⬜ |
@@ -426,7 +427,7 @@ export const deleteTodo = async (id: string) => {
 
 ### Abweichung vom Issue
 
-Das Issue verlangt "every todo has a Delete button". Unser Button steht nur im Edit-Modus. Das ist eine bewusste Entscheidung, das UI-Kriterium ist bei GitHub deshalb **nicht** abgehakt. Die anderen Kriterien und beide Tasks sind abgehakt.
+Das Issue verlangt "every todo has a Delete button". Im gemergten Stand steht der Button nur im Edit-Modus, das UI-Kriterium ist bei GitHub deshalb **nicht** abgehakt. Auf dem Branch `design` steht der Button zusätzlich im normalen Modus, neben Edit.
 
 ### Fehler, die uns passiert sind
 
@@ -509,6 +510,115 @@ Hinweise:
 - Die App fragt die API nach der gefilterten Liste. Es wird **nicht** im Browser gefiltert (Netzwerk-Tab prüfen).
 - Der Filter gehört in den **Schlüssel** von `useSWR`, damit jeder Filter seine eigene Anfrage hat. Dann muss `mutate` den passenden Schlüssel treffen.
 - Leere Ergebnisse zeigen eine passende Meldung.
+
+---
+
+## Design: Bootstrap im Cyberpunk-Look
+
+**Ziel:** Minimalistisches, utilitaristisches Design im Stil von Cyberpunk 2077 und Marathon, mit Bootstrap und lucide-Icons. Weniger ist mehr: ein dunkler, flacher Hintergrund, **eine** Akzentfarbe, keine Glows. Nur Optik, keine neue Logik. Branch `design`, kein Issue.
+
+### Setup
+
+```bash
+cd frontend
+npm i bootstrap @fontsource/jetbrains-mono
+```
+
+`index.html`: Dark-Mode von Bootstrap einschalten.
+
+```html
+<html lang="en" data-bs-theme="dark">
+```
+
+`src/index.tsx`: Bootstrap und Font **vor** `styles.css` importieren.
+
+```tsx
+import "bootstrap/dist/css/bootstrap.min.css";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/700.css";
+import App from "./App";
+import "./styles.css";
+```
+
+### Theme in `styles.css`
+
+Farben stehen als Variablen in `:root`, Bootstrap-Variablen werden überschrieben, nicht mit `!important` übersteuert.
+
+```css
+:root {
+  --ui-bg: #050505;
+  --ui-panel: #111112;
+  --ui-yellow: #fcee09;
+  --ui-cyan: #02d7f2;
+  --ui-red: #ff003c;
+  --cut: 8px;
+  /* ... */
+}
+
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--ui-bg);
+  --bs-body-font-family: "JetBrains Mono", ui-monospace, monospace;
+  --bs-border-radius: 0;
+  /* ... */
+}
+```
+
+Gestaltungsregeln:
+Anlehnung an das UI von Cyberpunk 2077:
+- Schwarz als Grund, Gelb (`#fcee09`) als Markenfarbe, Cyan (`#02d7f2`) für Zweitaktionen und Nummern, Rot (`#ff003c`) für Löschen und Fehler.
+- Die Kopfzeile ist ein gelber Balken mit schwarzer Schrift, in Großbuchstaben und weit gesperrt.
+- Alle Flächen (Kopfzeile, Zeilen, Buttons) haben zwei abgeschnittene Ecken, oben links und unten rechts. Das macht `clip-path: polygon(...)` mit der Variable `--cut`.
+- Buttons sind gefüllt und haben keinen Rahmen. Hover und Fokus füllen sie mit der Akzentfarbe.
+- Das Eingabefeld hat eine linke Kante in Cyan, die beim Fokus gelb wird.
+- Jede Zeile hat eine Nummer, ohne extra Markup: `counter-reset` an der Liste, `counter-increment` und `::before` am Eintrag.
+- Ein blinkender Cursor `_` steht bei Lade- und Leer-Zustand (aus bei `prefers-reduced-motion`).
+- Kein Raster, kein Glow, keine Schatten.
+
+Die alten globalen Regeln für `button` und `input` sind weg, sie kollidieren mit Bootstrap. Ebenso `.todo-form`, die Klasse hat die Form nie benutzt.
+
+### Markup
+
+`App.tsx`: Bootstrap-Klassen am bestehenden Markup, Logik und `aria-label`s unverändert.
+
+```tsx
+<ul className="todo-list list-group">
+  <li className="todo-item list-group-item d-flex align-items-center gap-2" key={todo.id}>
+```
+
+```tsx
+<button
+  type="button"
+  className="btn btn-sm btn-outline-danger"
+  aria-label={`delete todo: ${todo.title}`}
+  onClick={async () => {
+    await deleteTodo(todo.id);
+    await mutate("todos");
+  }}
+>
+  <Trash size={16} />
+</button>
+```
+
+`Form.tsx`: `input-group`, Placeholder und ein `Plus`-Icon statt des Textes "submit".
+
+```tsx
+<form className="input-group mb-4" onSubmit={handleSubmit}>
+  <input className="form-control" placeholder="NEW TASK..." aria-label="new todo title" ... />
+  <button className="btn btn-accent" aria-label="add todo" disabled={title.trim() === ""} type="submit">
+    <Plus size={18} />
+  </button>
+</form>
+```
+
+**Merke:**
+- Reihenfolge der Imports: erst Bootstrap, dann das eigene CSS. Sonst überschreibt Bootstrap deine Regeln.
+- `data-bs-theme="dark"` am `<html>` schaltet alle Bootstrap-Komponenten auf dunkel.
+- Farbe von Buttons kommt von der Klasse (`btn-accent`, `btn-outline-danger`), nicht vom Icon. Das Inline-`color="red"` am `Trash` ist weg.
+- `btn-accent` ist eine eigene Klasse. Sie setzt nur die Bootstrap-Button-Variablen (`--bs-btn-bg` und so weiter), so bleibt Bootstrap intakt.
+- Bei `clip-path` wird auch ein Rahmen an der Ecke abgeschnitten. Deshalb haben Buttons und Zeilen keinen Rahmen, sondern eine Füllung und nur eine linke Kante.
+- Ein Button, der nur ein Icon zeigt, braucht ein `aria-label`. Das gilt auch für den neuen Add-Button.
+- Jeder Button hat jetzt `type="button"`, nur der Submit-Button im Formular nicht.
+- `npm run check` und `npm run build` prüfen keine Optik. Aussehen, Fokus und schmale Breite (~375px) prüft nur der Browser.
 
 ---
 

@@ -10,36 +10,71 @@ export default function App() {
   const [currEditTodo, setCurrEditTodo] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
 
-  if (isLoading) return <div>loading...</div>;
-  if (error) return <div>failed to load</div>;
-  if (!data) return <div>an error has occurred</div>;
+  if (isLoading)
+    return (
+      <main>
+        <p className="status-line">&gt; loading...</p>
+      </main>
+    );
+  if (error)
+    return (
+      <main>
+        <div className="alert alert-danger" role="alert">
+          failed to load
+        </div>
+      </main>
+    );
+  if (!data)
+    return (
+      <main>
+        <div className="alert alert-danger" role="alert">
+          an error has occurred
+        </div>
+      </main>
+    );
 
   return (
     <main>
-      <h1>Todos</h1>
+      <h1>
+        Todos
+        <span className="count">{String(data.length).padStart(2, "0")}</span>
+      </h1>
       <Form title={title} setTitle={setTitle} />
-      {data.length === 0 && <p>Keine ToDo's</p>}
-      <ul className="todo-list">
+      {data.length === 0 && <p className="status-line">Keine ToDo's</p>}
+      <ul className="todo-list list-group">
         {data.map((todo) => (
-          <li className="todo-item" key={todo.id}>
+          <li
+            className="todo-item list-group-item d-flex align-items-center gap-2"
+            key={todo.id}
+          >
             {currEditTodo === todo.id && (
-              <>
+              <div className="flex-grow-1">
                 <input
                   type="text"
+                  className="form-control form-control-sm"
                   maxLength={50}
                   value={editTitle}
                   onChange={(e) => {
                     setEditTitle(e.target.value);
                   }}
                 />
-                {editTitle.trim() === "" && <p>Gültige Aufgabe einfügen.</p>}
-              </>
+                {editTitle.trim() === "" && (
+                  <p className="text-danger small mb-0 mt-1">
+                    Gültige Aufgabe einfügen.
+                  </p>
+                )}
+              </div>
             )}
             {currEditTodo !== todo.id ? (
               <>
-                <label className={`todo-title ${todo.done ? "done" : ""}`}>
+                <label
+                  className={`todo-title form-check-label ${
+                    todo.done ? "done" : ""
+                  }`}
+                >
                   <input
                     type="checkbox"
+                    className="form-check-input mt-0"
                     onChange={async () => {
                       await editTodo(todo.id, todo.title, !todo.done);
                       await mutate("todos");
@@ -49,6 +84,8 @@ export default function App() {
                   {todo.title}
                 </label>
                 <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
                   aria-label={`edit todo: ${todo.title}`}
                   onClick={() => {
                     setCurrEditTodo(todo.id);
@@ -57,10 +94,23 @@ export default function App() {
                 >
                   <SquarePen size={16} />
                 </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-danger"
+                  aria-label={`delete todo: ${todo.title}`}
+                  onClick={async () => {
+                    await deleteTodo(todo.id);
+                    await mutate("todos");
+                  }}
+                >
+                  <Trash size={16} />
+                </button>
               </>
             ) : (
               <>
                 <button
+                  type="button"
+                  className="btn btn-sm btn-accent"
                   aria-label={`save todo: ${todo.title}`}
                   onClick={async () => {
                     if (editTitle.trim() === "") {
@@ -74,6 +124,8 @@ export default function App() {
                   <Save size={16} />
                 </button>
                 <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
                   aria-label={`cancel todo changes on ${todo.title}`}
                   onClick={() => {
                     setCurrEditTodo(null);
@@ -82,13 +134,15 @@ export default function App() {
                   <X size={16} />
                 </button>
                 <button
+                  type="button"
+                  className="btn btn-sm btn-outline-danger"
                   aria-label={`delete todo: ${todo.title}`}
                   onClick={async () => {
                     await deleteTodo(todo.id);
                     await mutate("todos");
                   }}
                 >
-                  <Trash size={16} color="red" />
+                  <Trash size={16} />
                 </button>
               </>
             )}
