@@ -5,10 +5,11 @@ import Form from "./components/Form/Form";
 import { SquarePen, Trash, Save, X } from "lucide-react";
 
 export default function App() {
-  const { data, error, isLoading, mutate } = useSWR(`todos`, fetchTodos);
+  const { data, error, isLoading, mutate: retry } = useSWR(`todos`, fetchTodos);
   const [title, setTitle] = useState("");
   const [currEditTodo, setCurrEditTodo] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
+  const [errMsg, setErrMsg] = useState("");
 
   if (isLoading)
     return (
@@ -21,7 +22,12 @@ export default function App() {
       <main>
         <div className="alert alert-danger" role="alert">
           failed to load
-          <button onClick={() => mutate()}>Try again</button>
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => retry()}
+          >
+            Try again
+          </button>
         </div>
       </main>
     );
@@ -30,7 +36,12 @@ export default function App() {
       <main>
         <div className="alert alert-danger" role="alert">
           an error has occurred
-          <button onClick={() => mutate()}>Try again</button>
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => retry()}
+          >
+            Try again
+          </button>
         </div>
       </main>
     );
@@ -41,6 +52,11 @@ export default function App() {
         Todos
         <span className="count">{String(data.length).padStart(2, "0")}</span>
       </h1>
+      {errMsg !== "" && (
+        <div className="alert alert-danger" role="alert">
+          <p className="status-line">{errMsg}</p>
+        </div>
+      )}
       <Form title={title} setTitle={setTitle} />
       {data.length === 0 && <p className="status-line">Keine ToDo's</p>}
       <ul className="todo-list list-group">
@@ -78,8 +94,15 @@ export default function App() {
                     type="checkbox"
                     className="visually-hidden"
                     onChange={async () => {
-                      await editTodo(todo.id, todo.title, !todo.done);
-                      await mutate("todos");
+                      try {
+                        await editTodo(todo.id, todo.title, !todo.done);
+                        await mutate("todos");
+                        setErrMsg("");
+                      } catch {
+                        setErrMsg(
+                          "Todo konnte nicht bearbeitet werden. Bitte nochmal versuchen."
+                        );
+                      }
                     }}
                     checked={todo.done}
                   />
@@ -93,20 +116,10 @@ export default function App() {
                     onClick={() => {
                       setCurrEditTodo(todo.id);
                       setEditTitle(todo.title);
+                      setErrMsg("");
                     }}
                   >
                     <SquarePen size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-danger"
-                    aria-label={`delete todo: ${todo.title}`}
-                    onClick={async () => {
-                      await deleteTodo(todo.id);
-                      await mutate("todos");
-                    }}
-                  >
-                    <Trash size={16} />
                   </button>
                 </div>
               </>
@@ -120,9 +133,16 @@ export default function App() {
                     if (editTitle.trim() === "") {
                       return;
                     }
-                    await editTodo(todo.id, editTitle, todo.done);
-                    await mutate("todos");
-                    setCurrEditTodo(null);
+                    try {
+                      await editTodo(todo.id, editTitle, todo.done);
+                      await mutate("todos");
+                      setCurrEditTodo(null);
+                      setErrMsg("");
+                    } catch {
+                      setErrMsg(
+                        "Todo konnte nicht gespeichert werden. Bitte nochmal versuchen."
+                      );
+                    }
                   }}
                 >
                   <Save size={16} />
@@ -142,8 +162,15 @@ export default function App() {
                   className="btn btn-sm btn-outline-danger"
                   aria-label={`delete todo: ${todo.title}`}
                   onClick={async () => {
-                    await deleteTodo(todo.id);
-                    await mutate("todos");
+                    try {
+                      await deleteTodo(todo.id);
+                      await mutate("todos");
+                      setErrMsg("");
+                    } catch {
+                      setErrMsg(
+                        "Todo konnte nicht gelöscht werden. Bitte nochmal versuchen."
+                      );
+                    }
                   }}
                 >
                   <Trash size={16} />
