@@ -5,13 +5,14 @@ export default function Form({ title, setTitle }: FormProps) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     await createTodo(title);
-    await mutate("todos")
-    setTitle("")
+    await mutate("todos");
+    setTitle("");
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <input
+        maxLength={50}
         type="text"
         onChange={(e) => setTitle(e.target.value)}
         value={title}
