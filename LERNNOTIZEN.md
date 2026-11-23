@@ -9,7 +9,7 @@ Stack: Express 5 + MongoDB (`backend/`), React 19 + SWR (`frontend/`).
 | 3 | Add a Todo | ✅ |
 | 4 | Mark a Todo as Done | ✅ |
 | 5 | Edit a Todo | ✅ (PR #14 gemerged) |
-| 6 | Delete a Todo | ⬜ |
+| 6 | Delete a Todo | 🟡 getestet, noch nicht gemerged (Button nur im Edit-Modus) |
 | 7 | Loading, Error and Empty States | ⬜ |
 | 8 | Hand Over | ⬜ |
 | 9 | Bonus: Filter | ⬜ |
@@ -375,24 +375,73 @@ Die Bedingung `currEditTodo === todo.id` gilt nur für das Todo, das gerade bear
 
 `DELETE /api/todos/:id` in `backend/src/routes/todos.ts`:
 
-- Löscht das Todo und antwortet **204 ohne Body**.
-- Unbekannte oder ungültige `id`: 404 `{ "error": "Todo not found" }`. Zweimal löschen gibt beim zweiten Mal 404.
+```ts
+todosRouter.delete("/:id", async (request, response) => {
+  const deleteTodo = await todoModel.findByIdAndDelete(request.params.id);
+  if (!deleteTodo) {
+    return response.status(404).json({ error: "Todo not found" });
+  }
 
-Hinweise:
-- Mongoose hat `findByIdAndDelete`. Wie bei `findByIdAndUpdate` kommt `null` zurück, wenn es das Todo nicht gibt.
-- Bei 204 gibt es keinen Body. Für die Antwort gibt es `response.status(204).send()` oder `.end()`, nicht `.json(...)`.
-- Eine ungültige `id` (`abc`) löst den `CastError` aus, den `errors.ts` schon behandelt.
+  response.status(204).send();
+});
+```
+
+- `findByIdAndDelete` gibt `null` zurück, wenn es das Todo nicht gibt. Daraus wird 404. Zweimal löschen gibt beim zweiten Mal 404.
+- Ungültige `id` (`abc`): Mongoose wirft den `CastError`, `errors.ts` macht daraus 404.
 
 ### Frontend
 
-- `api.ts`: eine Funktion `deleteTodo(id)` mit `method: "DELETE"`. Bei 204 darf man `response.json()` **nicht** aufrufen.
-- `App.tsx`: ein Delete-Button pro Todo, danach `await mutate("todos")`.
-- Der auskommentierte Block mit `Trash` in `App.tsx` ist ein Ansatz. Prüf sein `aria-label`, es hatte ein verrutschtes Backtick.
+`api.ts`:
 
-### Prüfen
+```ts
+export const deleteTodo = async (id: string) => {
+  const response = await fetch(`${API_URL}/todos/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error("Todo nicht gefunden");
+  }
+};
+```
 
-- Bruno: 204, dann dieselbe Anfrage noch einmal (404), dazu eine ungültige `id`.
-- Browser: Todo löschen, Seite neu laden, es bleibt weg. Kontrolle in der Datenbank.
+`App.tsx`: der Button steht im Edit-Modus, neben Save und Cancel.
+
+```tsx
+<button
+  aria-label={`delete todo: ${todo.title}`}
+  onClick={async () => {
+    await deleteTodo(todo.id);
+    await mutate("todos");
+  }}
+>
+  <Trash size={16} color="red" />
+</button>
+```
+
+**Merke:**
+- Bei 204 gibt es keinen Body. Antwort im Backend mit `.status(204).send()`, nicht mit `.json(...)`. Im Frontend kein `response.json()`, sonst wirft die Funktion trotz erfolgreichem Löschen einen Fehler.
+- `deleteTodo` gibt nichts zurück, der Typ ist von selbst `Promise<void>`. Kein `Promise<Todo>` hinschreiben.
+- Die `id` steht in der URL. Ein DELETE braucht keinen Body und keinen `Content-Type`.
+- Ohne `await` vor `deleteTodo(...)` läuft `mutate` zu früh los, die Liste lädt dann mit dem alten Stand. TypeScript meldet das nicht.
+
+### Abweichung vom Issue
+
+Das Issue verlangt "every todo has a Delete button". Unser Button steht nur im Edit-Modus. Das ist eine bewusste Entscheidung, das UI-Kriterium ist bei GitHub deshalb **nicht** abgehakt. Die anderen Kriterien und beide Tasks sind abgehakt.
+
+### Fehler, die uns passiert sind
+
+| Fehler | Richtig |
+|---|---|
+| `status(204).json(toTodo(...))` | `status(204).send()`, kein Body |
+| Variable zu `deleteTodo` umbenannt, Zeile darunter nutzt noch `editTodo` | Nach jedem Umbenennen alle Stellen prüfen, `npm run typecheck` zeigt es |
+| `deleteTodo` aus `editTodo` kopiert: `Promise<Todo>`, `body`, `response.json()`, Text "bearbeitet" | Beim Kopieren Typ, Body, Rückgabe und Fehlertext anpassen |
+| `deleteTodo(todo.id);` ohne `await` | `await deleteTodo(todo.id);` vor `mutate` |
+| Delete-Button beim Aufräumen in den Edit-Zweig gerutscht | Bewusst entscheiden, in welchem Zweig der Button steht |
+
+### Geprüft
+
+- Bruno: 204, dieselbe Anfrage noch einmal (404), ungültige `id` (404).
+- Browser: Todo löschen, es verschwindet sofort und bleibt nach dem Reload weg.
 
 ---
 
@@ -432,8 +481,6 @@ Checkliste:
 - Jede Story funktioniert im Browser.
 
 Mögliche Aufräumpunkte, die wir gesehen haben:
-- Ungenutzter Import `Trash` und auskommentierter Delete-Block in `App.tsx`.
-- `console.log`-Reste.
 - Unbenutzte Beispielkommentare in `routes/todos.ts` und `models/Todo.ts` (`// Issue 2: ...`).
 
 **Bekannte Lücken im Backend** (vor dem Vertragsabgleich testen):
