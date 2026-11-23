@@ -11,7 +11,7 @@ Stack: Express 5 + MongoDB (`backend/`), React 19 + SWR (`frontend/`).
 | 5 | Edit a Todo | ✅ (PR #14 gemerged) |
 | 6 | Delete a Todo | ✅ (PR #15 gemerged) |
 | – | Design (Branch `design`) | 🟡 Code fertig, `check` und `build` laufen, Browser-Test offen |
-| 7 | Loading, Error and Empty States | ⬜ |
+| 7 | Loading, Error and Empty States | 🟡 in Arbeit (siehe Stand im Abschnitt) |
 | 8 | Hand Over | ⬜ |
 | 9 | Bonus: Filter | ⬜ |
 
@@ -465,6 +465,33 @@ Hinweise:
 - Für "Add deaktiviert" brauchst du einen State, der während der Anfrage `true` ist. Setz ihn in `finally` wieder zurück.
 
 Prüfen: Backend stoppen, Seite neu laden, Backend starten, "Try again" klicken. Danach ein Todo hinzufügen und das Backend vor dem Klick stoppen.
+
+**Stand (2026-11-23), Lösungscode kommt erst, wenn das Issue fertig ist:**
+
+| Anforderung | Stand |
+|---|---|
+| "Try again" bei Ladefehler | ✅ im Browser geprüft |
+| Fehler bei Edit (Speichern), Delete (Edit-Modus), Checkbox anzeigen, Liste bleibt | ✅ in `App.tsx`, Type-Check grün, Browser-Test mit gestopptem Backend offen |
+| Fehler bei Add | ⬜ (`Form.tsx`) |
+| Text bleibt nach fehlgeschlagenem Speichern | ✅ beim Edit, ⬜ bei Add |
+| Leere Liste: freundlicher Hinweis | ⬜ |
+| "Add" während der Anfrage deaktiviert | ⬜ |
+
+**Merke (bisher):**
+- `useSWR` gibt ein eigenes `mutate` zurück. Beim Destructuring mit `mutate: neuerName` umbenennen, weil das globale `mutate` aus dem Import sonst verdeckt wird.
+- Ladefehler und Aktionsfehler sind zwei Dinge. Ein Ladefehler ersetzt die Seite (früher `return`), ein Aktionsfehler ist ein State und steht im Haupt-`return`, damit die Liste sichtbar bleibt.
+- Ein `catch` ohne Variable reicht, wenn man einen eigenen Text zeigt. Rohe Fehlertexte (`Failed to fetch`) sind für Nutzer nutzlos.
+- Eine gute Meldung sagt, was passiert ist und was man tun kann, und passt zur Aktion.
+- `setErrMsg("")` gehört in den Erfolgsfall, sonst bleibt die alte Meldung stehen.
+- `setCurrEditTodo(null)` steht nach `await editTodo` im `try`: Bei einem Fehler wird es nie erreicht, der Edit-Modus und der getippte Text bleiben.
+
+| Fehler | Richtig |
+|---|---|
+| `setErrMsg(instanceof Error.message)` | `instanceof` braucht links einen Wert: `fehler instanceof Error` |
+| `setErrMsg(err.message)` außerhalb des `if (err instanceof Error)` | Die Typprüfung gilt nur innerhalb des `if`-Blocks. Mit eigenem Text ist sie unnötig |
+| Meldung als frühes `return` oben | Das ersetzt die ganze Seite. Die Meldung gehört in den Haupt-`return` |
+| Text "nicht gelöscht" beim Speichern (Copy-Paste) | Meldung passend zur Aktion schreiben |
+| `try/catch` um reine State-Änderungen (Stift-Button) | Nur um Aufrufe, die fehlschlagen können (`await` auf die API) |
 
 ---
 
