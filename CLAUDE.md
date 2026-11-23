@@ -30,3 +30,11 @@ A full-stack todo app: an Express 5 API with MongoDB in `backend/`, a React app 
 - CORS is set up in `backend/src/app.ts` for `http://localhost:5173`. Do not change it and do not use `*`.
 - Use async/await. Name request parameters `request` and `response`. No `any`.
 - Only do what the current issue asks for. No authentication, no tests, no deployment yet.
+
+## Learning notes
+
+- `LERNNOTIZEN.md` is the user's study guide. Write it in German. Keep it up to date: when an issue is finished or its code changes, update the matching section in the same step.
+- Style: short, no filler. One section per issue (`## Issue N: Title`) with a goal, the real code from the repo, and "Merke" points that explain why. Open issues get a goal, requirements and hints, but no solution code.
+- For finished issues add the mistakes that happened and the fix, for example as a table "Fehler / Richtig".
+- Keep the status table at the top current. Only mark an issue done when it is merged or the user says so. Do not claim a browser test that nobody ran.
+- Quote code from the current files, never from memory.

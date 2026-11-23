@@ -1,5 +1,5 @@
 import useSWR, { mutate } from "swr";
-import { editTodo, fetchTodos } from "./api";
+import { editTodo, fetchTodos, deleteTodo } from "./api";
 import { useState } from "react";
 import Form from "./components/Form/Form";
 import { SquarePen, Trash, Save, X } from "lucide-react";
@@ -26,6 +26,7 @@ export default function App() {
               <>
                 <input
                   type="text"
+                  maxLength={50}
                   value={editTitle}
                   onChange={(e) => {
                     setEditTitle(e.target.value);
@@ -80,11 +81,17 @@ export default function App() {
                 >
                   <X size={16} />
                 </button>
+                <button
+                  aria-label={`delete todo: ${todo.title}`}
+                  onClick={async () => {
+                    await deleteTodo(todo.id);
+                    await mutate("todos");
+                  }}
+                >
+                  <Trash size={16} color="red" />
+                </button>
               </>
             )}
-            {/* <button aria-label={`delete todo: ${todo.title}`}>
-              <Trash size={16} color="red" />
-            </button> */}
           </li>
         ))}
       </ul>

@@ -38,3 +38,12 @@ todosRouter.put("/:id", async (request, response) => {
 
   response.status(200).json(toTodo(editTodo));
 });
+
+todosRouter.delete("/:id", async (request, response) => {
+  const deleteTodo = await todoModel.findByIdAndDelete(request.params.id);
+  if (!deleteTodo) {
+    return response.status(404).json({ error: "Todo not found" });
+  }
+
+  response.status(204).send();
+});
