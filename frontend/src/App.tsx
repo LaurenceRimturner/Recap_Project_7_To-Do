@@ -57,8 +57,12 @@ export default function App() {
           <p className="status-line">{errMsg}</p>
         </div>
       )}
-      <Form title={title} setTitle={setTitle} />
-      {data.length === 0 && <p className="status-line">Keine ToDo's</p>}
+      <Form title={title} setTitle={setTitle} setErrMsg={setErrMsg} />
+      {data.length === 0 && (
+        <p className="status-line">
+          Noch keine Todos. Erstelle doch eins =^w^=
+        </p>
+      )}
       <ul className="todo-list list-group">
         {data.map((todo) => (
           <li

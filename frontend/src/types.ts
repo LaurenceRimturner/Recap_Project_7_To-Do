@@ -12,4 +12,5 @@ export type NewTodo = {
 export type FormProps = {
   title: string;
   setTitle: (title: string) => void;
+  setErrMsg: (title: string) => void;
 };

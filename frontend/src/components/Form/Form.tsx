@@ -2,12 +2,17 @@ import type { FormProps } from "../../types";
 import { createTodo } from "../../api";
 import { mutate } from "swr";
 import { Plus } from "lucide-react";
-export default function Form({ title, setTitle }: FormProps) {
+export default function Form({ title, setTitle, setErrMsg }: FormProps) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    await createTodo(title);
-    await mutate("todos");
-    setTitle("");
+    try {
+      await createTodo(title);
+      await mutate("todos");
+      setTitle("");
+      setErrMsg("");
+    } catch {
+      setErrMsg("Todo konnte nicht hinzugefügt werden. Bitte nochmal versuchen.");
+    }
   }
 
   return (
