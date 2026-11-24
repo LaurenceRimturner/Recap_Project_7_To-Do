@@ -96,7 +96,11 @@ export default function App() {
       />
       {todos.length === 0 && (
         <p className="status-line">
-          Noch keine Todos. Erstelle doch eins =^w^=
+          {filter === "all"
+            ? "Noch keine Todos. Erstelle doch eins ඞ"
+            : filter === "open"
+              ? "Keine offenen Todos."
+              : "Noch nichts erledigt."}
         </p>
       )}
       <ul className="todo-list list-group">
