@@ -13,7 +13,7 @@ Stack: Express 5 + MongoDB (`backend/`), React 19 + SWR (`frontend/`).
 | – | Design (Branch `design`) | 🟡 Code fertig, `check` und `build` laufen, Browser-Test offen |
 | 7 | Loading, Error and Empty States | 🟡 in Arbeit (siehe Stand im Abschnitt) |
 | 8 | Hand Over | ⬜ |
-| 9 | Bonus: Filter | ⬜ |
+| 9 | Bonus: Filter | 🟡 Code fertig, im Browser geprüft, PR offen |
 
 Regeln aus `CLAUDE.md`: pro Issue ein Branch, nur das tun, was das Issue verlangt, alle API-Aufrufe in `frontend/src/api.ts`, `any` ist verboten, Routen rufen das Mongoose-Modell direkt auf.
 
@@ -526,17 +526,62 @@ Mögliche Aufräumpunkte, die wir gesehen haben:
 
 `GET /api/todos?done=true` liefert nur erledigte, `?done=false` nur offene, ohne `done` alle.
 
-Hinweise:
-- Der Wert steht in `request.query.done`, immer als String.
-- `todoModel.find(filter)` nimmt ein Objekt. Ohne Parameter braucht es einen leeren Filter.
-- Beschreib den neuen Parameter in `docs/api-contract.md`.
+```ts
+todosRouter.get("/", async (request, response) => {
+  const done = request.query.done;
+  const filter: { done?: boolean } = {};
+  if (done === "true") {
+    filter.done = true;
+  }
+  if (done === "false") {
+    filter.done = false;
+  }
+  const todos = await todoModel.find(filter);
+  response.json(todos.map(toTodo));
+});
+```
+
+**Merke:**
+- `request.query.done` ist ein **String** (`"true"`, `"false"`) oder `undefined`. Mongo braucht einen echten Boolean, darum `filter.done = true`.
+- Ohne `done` bleibt `filter` leer, `find({})` liefert alle.
+- `const filter = {}` hat den Typ `{}`, dort gibt es kein `done`. Typ hinter den Namen: `const filter: { done?: boolean } = {};`
+- Der Parameter steht in `docs/api-contract.md`.
 
 ### Frontend
 
-- Drei Buttons "All", "Open" und "Done". Der aktive ist sichtbar.
-- Die App fragt die API nach der gefilterten Liste. Es wird **nicht** im Browser gefiltert (Netzwerk-Tab prüfen).
-- Der Filter gehört in den **Schlüssel** von `useSWR`, damit jeder Filter seine eigene Anfrage hat. Dann muss `mutate` den passenden Schlüssel treffen.
-- Leere Ergebnisse zeigen eine passende Meldung.
+`api.ts` übersetzt den Filter (`"open"` / `"done"`) in den Query-String (`?done=false` / `?done=true`). `"all"` hängt nichts an.
+
+`App.tsx`: der Filter ist ein State und steht im **Schlüssel** von `useSWR`.
+
+```tsx
+const [filter, setFilter] = useState<Filter>("all");
+const { data: todos, error, isLoading, mutate: retry } = useSWR(
+  [`todos`, filter],
+  ([, currentFilter]) => fetchTodos(currentFilter)
+);
+```
+
+`Form.tsx`: die Form kennt den Filter nicht, darum lädt sie alle "todos"-Schlüssel neu.
+
+```ts
+await mutate((key) => Array.isArray(key) && key[0] === "todos");
+```
+
+**Merke:**
+- Gefiltert wird im **Backend**. Im Netzwerk-Tab steht bei "Open" `?done=false`.
+- Der Filter im Schlüssel gibt jedem Filter seine eigene Anfrage.
+- SWR gibt bei einem Array-Schlüssel das **ganze Array** an den Fetcher. Darum `([, currentFilter]) => ...`, das Komma überspringt `"todos"`.
+- Der Schlüssel heißt nicht mehr `"todos"`, `mutate("todos")` trifft nichts mehr. In `App.tsx` nimmt man `retry()`, in `Form.tsx` eine Matcher-Funktion.
+- Der State `filter` muss **vor** `useSWR` stehen.
+- Die Leer-Meldung nutzt einen verschachtelten ternären Operator (`BEDINGUNG ? A : B`) über `filter`.
+
+### Fehler, die uns passiert sind
+
+| Fehler | Richtig |
+|---|---|
+| `const filter = {done? :Boolean} = {}` | `const filter: { done?: boolean } = {};` |
+| `useSWR(["todos", filter], fetchTodos)`: der Fetcher bekommt das ganze Array, der Type-Check merkt es nicht | `([, currentFilter]) => fetchTodos(currentFilter)` |
+| `mutate("todos")` nach der Schlüssel-Änderung | `retry()` in `App.tsx`, Matcher-Funktion in `Form.tsx` |
 
 ---
 
