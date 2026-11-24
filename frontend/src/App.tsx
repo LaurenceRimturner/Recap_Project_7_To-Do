@@ -25,7 +25,10 @@ export default function App() {
   if (error)
     return (
       <main>
-        <div className="alert alert-danger" role="alert">
+        <div
+          className="alert alert-danger d-flex align-items-center justify-content-between gap-3"
+          role="alert"
+        >
           failed to load
           <button
             className="btn btn-sm btn-outline-secondary"
@@ -39,7 +42,10 @@ export default function App() {
   if (!todos)
     return (
       <main>
-        <div className="alert alert-danger" role="alert">
+        <div
+          className="alert alert-danger d-flex align-items-center justify-content-between gap-3"
+          role="alert"
+        >
           an error has occurred
           <button
             className="btn btn-sm btn-outline-secondary"
