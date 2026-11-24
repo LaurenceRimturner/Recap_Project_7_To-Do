@@ -8,12 +8,12 @@ Stack: Express 5 + MongoDB (`backend/`), React 19 + SWR (`frontend/`).
 | 2 | See All Todos | ✅ |
 | 3 | Add a Todo | ✅ |
 | 4 | Mark a Todo as Done | ✅ |
-| 5 | Edit a Todo | ✅ (PR #14 gemerged) |
-| 6 | Delete a Todo | ✅ (PR #15 gemerged) |
-| – | Design (Branch `design`) | 🟡 Code fertig, `check` und `build` laufen, Browser-Test offen |
-| 7 | Loading, Error and Empty States | 🟡 in Arbeit (siehe Stand im Abschnitt) |
+| 5 | Edit a Todo | ✅ |
+| 6 | Delete a Todo | ✅ |
+| – | Design (Branch `design`) | ✅ |
+| 7 | Loading, Error and Empty States | ✅ |
 | 8 | Hand Over | ⬜ |
-| 9 | Bonus: Filter | 🟡 Code fertig, im Browser geprüft, PR offen |
+| 9 | Bonus: Filter | ✅ |
 
 Regeln aus `CLAUDE.md`: pro Issue ein Branch, nur das tun, was das Issue verlangt, alle API-Aufrufe in `frontend/src/api.ts`, `any` ist verboten, Routen rufen das Mongoose-Modell direkt auf.
 
@@ -466,18 +466,97 @@ Hinweise:
 
 Prüfen: Backend stoppen, Seite neu laden, Backend starten, "Try again" klicken. Danach ein Todo hinzufügen und das Backend vor dem Klick stoppen.
 
-**Stand (2026-11-23), Lösungscode kommt erst, wenn das Issue fertig ist:**
+### Ladefehler: "Try again"
 
-| Anforderung | Stand |
-|---|---|
-| "Try again" bei Ladefehler | ✅ im Browser geprüft |
-| Fehler bei Edit (Speichern), Delete (Edit-Modus), Checkbox anzeigen, Liste bleibt | ✅ in `App.tsx`, Type-Check grün, Browser-Test mit gestopptem Backend offen |
-| Fehler bei Add | ⬜ (`Form.tsx`) |
-| Text bleibt nach fehlgeschlagenem Speichern | ✅ beim Edit, ⬜ bei Add |
-| Leere Liste: freundlicher Hinweis | ⬜ |
-| "Add" während der Anfrage deaktiviert | ⬜ |
+`App.tsx`: `mutate` aus dem Hook heißt `retry`. Der Ladefehler ersetzt die Seite (früher `return`).
 
-**Merke (bisher):**
+```tsx
+const {
+  data: todos,
+  error,
+  isLoading,
+  mutate: retry,
+} = useSWR([`todos`, filter], ([, currentFilter]) => fetchTodos(currentFilter));
+
+if (error)
+  return (
+    <main>
+      <div className="alert alert-danger d-flex align-items-center justify-content-between gap-3" role="alert">
+        failed to load
+        <button className="btn btn-sm btn-accent" onClick={() => retry()}>
+          Try again
+        </button>
+      </div>
+    </main>
+  );
+```
+
+### Aktionsfehler: Edit, Delete, Checkbox, Add
+
+Die Meldung ist ein State in `App.tsx` und steht im Haupt-`return`, die Liste bleibt sichtbar.
+
+```tsx
+const [errorMessage, setErrorMessage] = useState("");
+
+{errorMessage !== "" && (
+  <div className="alert alert-danger" role="alert">
+    <p className="status-line">{errorMessage}</p>
+  </div>
+)}
+```
+
+Speichern (Edit): `setEditingTodoId(null)` steht im `try` hinter dem `await`, bei einem Fehler bleiben Edit-Modus und Text.
+
+```tsx
+try {
+  await editTodo(todo.id, editingTitle, todo.done);
+  await retry();
+  setEditingTodoId(null);
+  setErrorMessage("");
+} catch {
+  setErrorMessage("Todo konnte nicht gespeichert werden. Bitte nochmal versuchen.");
+}
+```
+
+Add (`Form.tsx`): die Form bekommt `setErrorMessage` als Prop. `isSubmitting` sperrt den Button während der Anfrage, `finally` gibt ihn wieder frei. Bei einem Fehler wird `setNewTodoTitle("")` nie erreicht, der Text bleibt.
+
+```tsx
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  try {
+    setIsSubmitting(true);
+    await createTodo(newTodoTitle);
+    await mutate((key) => Array.isArray(key) && key[0] === "todos");
+    setNewTodoTitle("");
+    setErrorMessage("");
+  } catch {
+    setErrorMessage("Todo konnte nicht hinzugefügt werden. Bitte nochmal versuchen.");
+  } finally {
+    setIsSubmitting(false);
+  }
+}
+
+<button disabled={newTodoTitle.trim() === "" || isSubmitting === true} type="submit">
+```
+
+### Leere Liste
+
+```tsx
+{todos.length === 0 && (
+  <p className="status-line">
+    {filter === "all"
+      ? "Noch keine Todos. Erstelle doch eins ඞ"
+      : filter === "open"
+        ? "Keine offenen Todos."
+        : "Noch nichts erledigt."}
+  </p>
+)}
+```
+
+**Merke:**
+- `finally` läuft bei Erfolg und Fehler, darum setzt es `isSubmitting` zurück.
 - `useSWR` gibt ein eigenes `mutate` zurück. Beim Destructuring mit `mutate: neuerName` umbenennen, weil das globale `mutate` aus dem Import sonst verdeckt wird.
 - Ladefehler und Aktionsfehler sind zwei Dinge. Ein Ladefehler ersetzt die Seite (früher `return`), ein Aktionsfehler ist ein State und steht im Haupt-`return`, damit die Liste sichtbar bleibt.
 - Ein `catch` ohne Variable reicht, wenn man einen eigenen Text zeigt. Rohe Fehlertexte (`Failed to fetch`) sind für Nutzer nutzlos.
@@ -670,7 +749,7 @@ Die Liste ist ein CSS-Grid mit drei Karten pro Reihe (`grid-template-columns: re
   aria-label={`delete todo: ${todo.title}`}
   onClick={async () => {
     await deleteTodo(todo.id);
-    await mutate("todos");
+    await retry();
   }}
 >
   <Trash size={16} />
