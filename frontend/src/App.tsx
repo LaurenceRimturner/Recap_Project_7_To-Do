@@ -30,10 +30,7 @@ export default function App() {
           role="alert"
         >
           failed to load
-          <button
-            className="btn btn-sm btn-accent"
-            onClick={() => retry()}
-          >
+          <button className="btn btn-sm btn-accent" onClick={() => retry()}>
             Try again
           </button>
         </div>
@@ -47,10 +44,7 @@ export default function App() {
           role="alert"
         >
           an error has occurred
-          <button
-            className="btn btn-sm btn-accent"
-            onClick={() => retry()}
-          >
+          <button className="btn btn-sm btn-accent" onClick={() => retry()}>
             Try again
           </button>
         </div>
@@ -91,6 +85,11 @@ export default function App() {
                   className="form-control form-control-sm"
                   maxLength={50}
                   value={editingTitle}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setEditingTodoId(null);
+                    }
+                  }}
                   onChange={(e) => {
                     setEditingTitle(e.target.value);
                   }}
