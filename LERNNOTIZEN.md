@@ -151,14 +151,14 @@ export const createTodo = async (title: string): Promise<Todo> => {
 ```tsx
 async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
   e.preventDefault();
-  await createTodo(title);
+  await createTodo(newTodoTitle);
   await mutate("todos");
-  setTitle("");
+  setNewTodoTitle("");
 }
 
 <form onSubmit={handleSubmit}>
-  <input type="text" onChange={(e) => setTitle(e.target.value)} value={title} />
-  <button disabled={title.trim() === ""} type="submit">submit</button>
+  <input type="text" onChange={(e) => setNewTodoTitle(e.target.value)} value={newTodoTitle} />
+  <button disabled={newTodoTitle.trim() === ""} type="submit">submit</button>
 </form>
 ```
 
@@ -167,7 +167,7 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 - `e.preventDefault()` verhindert, dass der Browser die Seite neu lädt.
 - Das Eingabefeld ist "kontrolliert": `value` kommt aus dem State, `onChange` schreibt zurück.
 - Reihenfolge: speichern, `mutate`, dann das Feld leeren.
-- `disabled={title.trim() === ""}` verhindert leere Titel.
+- `disabled={newTodoTitle.trim() === ""}` verhindert leere Titel.
 
 ---
 
@@ -257,12 +257,12 @@ npm i lucide-react
 ### Schritt 2: State anlegen
 
 ```tsx
-const [currEditTodo, setCurrEditTodo] = useState<string | null>(null);
-const [editTitle, setEditTitle] = useState<string>("");
+const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
+const [editingTitle, setEditingTitle] = useState<string>("");
 ```
 
-- `currEditTodo` ist die `id` des Todos im Edit-Modus, oder `null`. Ein Boolean würde **alle** Todos gleichzeitig umschalten.
-- `editTitle` ist der Text im Eingabefeld. Der `title`-State gehört zum Formular für neue Todos.
+- `editingTodoId` ist die `id` des Todos im Edit-Modus, oder `null`. Ein Boolean würde **alle** Todos gleichzeitig umschalten.
+- `editingTitle` ist der Text im Eingabefeld. Der `newTodoTitle`-State gehört zum Formular für neue Todos.
 - Hooks stehen **vor** den frühen `return`s.
 
 ### Schritt 3: Edit-Button
@@ -271,8 +271,8 @@ const [editTitle, setEditTitle] = useState<string>("");
 <button
   aria-label={`edit todo: ${todo.title}`}
   onClick={() => {
-    setCurrEditTodo(todo.id);
-    setEditTitle(todo.title);
+    setEditingTodoId(todo.id);
+    setEditingTitle(todo.title);
   }}
 >
   <SquarePen size={16} />
@@ -281,26 +281,26 @@ const [editTitle, setEditTitle] = useState<string>("");
 
 - `aria-label` gehört an den **Button**, nicht ans Icon. Ein Screenreader liest den Namen des Buttons vor.
 - `onClick` braucht eine **Funktion**: `() => setX(id)`. `onClick={setX(id)}` läuft sofort beim Rendern und löst eine Endlosschleife aus.
-- `setEditTitle(todo.title)` füllt das Feld mit dem alten Titel.
+- `setEditingTitle(todo.title)` füllt das Feld mit dem alten Titel.
 
 ### Schritt 4: Feld statt Titel anzeigen
 
-Die Bedingung `currEditTodo === todo.id` gilt nur für das Todo, das gerade bearbeitet wird.
+Die Bedingung `editingTodoId === todo.id` gilt nur für das Todo, das gerade bearbeitet wird.
 
 ```tsx
-{currEditTodo === todo.id && (
+{editingTodoId === todo.id && (
   <>
     <input
       type="text"
-      value={editTitle}
+      value={editingTitle}
       onChange={(e) => {
-        setEditTitle(e.target.value);
+        setEditingTitle(e.target.value);
       }}
     />
-    {editTitle.trim() === "" && <p>Gültige Aufgabe einfügen.</p>}
+    {editingTitle.trim() === "" && <p>Gültige Aufgabe einfügen.</p>}
   </>
 )}
-{currEditTodo !== todo.id ? (
+{editingTodoId !== todo.id ? (
   <>
     {/* Label mit Checkbox und Titel, Edit-Button */}
   </>
@@ -311,7 +311,7 @@ Die Bedingung `currEditTodo === todo.id` gilt nur für das Todo, das gerade bear
 )}
 ```
 
-- Der neue Text steht in `e.target.value`. `onChange` muss `setEditTitle` aufrufen, nicht `setCurrEditTodo`.
+- Der neue Text steht in `e.target.value`. `onChange` muss `setEditingTitle` aufrufen, nicht `setEditingTodoId`.
 - Mehrere Elemente pro Zweig gruppiert man mit `<>...</>`.
 - In `{ }` bist du in JavaScript: Werte schreibst du ohne weitere Klammern (`todo.title`). `${...}` gilt nur in Backticks.
 
@@ -321,12 +321,12 @@ Die Bedingung `currEditTodo === todo.id` gilt nur für das Todo, das gerade bear
 <button
   aria-label={`save todo: ${todo.title}`}
   onClick={async () => {
-    if (editTitle.trim() === "") {
+    if (editingTitle.trim() === "") {
       return;
     }
-    await editTodo(todo.id, editTitle, todo.done);
+    await editTodo(todo.id, editingTitle, todo.done);
     await mutate("todos");
-    setCurrEditTodo(null);
+    setEditingTodoId(null);
   }}
 >
   <Save size={16} />
@@ -334,7 +334,7 @@ Die Bedingung `currEditTodo === todo.id` gilt nur für das Todo, das gerade bear
 ```
 
 - Das frühe `return` verhindert, dass ein leerer Titel gesendet wird. Lies die Bedingung laut: "Wenn der Titel leer ist, brich ab."
-- Gesendet wird `editTitle` (der getippte Text), nicht `todo.title` (der alte Titel). TypeScript merkt den Unterschied nicht, beide sind `string`.
+- Gesendet wird `editingTitle` (der getippte Text), nicht `todo.title` (der alte Titel). TypeScript merkt den Unterschied nicht, beide sind `string`.
 - `todo.done` bleibt erhalten, weil der PUT beide Felder verlangt.
 - Reihenfolge: speichern, `mutate`, Edit-Modus beenden.
 
@@ -344,7 +344,7 @@ Die Bedingung `currEditTodo === todo.id` gilt nur für das Todo, das gerade bear
 <button
   aria-label={`cancel todo changes on ${todo.title}`}
   onClick={() => {
-    setCurrEditTodo(null);
+    setEditingTodoId(null);
   }}
 >
   <X size={16} />
@@ -358,8 +358,8 @@ Die Bedingung `currEditTodo === todo.id` gilt nur für das Todo, das gerade bear
 
 | Fehler | Richtig |
 |---|---|
-| `todo.title` im PUT beim Speichern | `editTitle` |
-| `if (editTitle.trim() !== "") return;` | `=== ""` |
+| `todo.title` im PUT beim Speichern | `editingTitle` |
+| `if (editingTitle.trim() !== "") return;` | `=== ""` |
 | `onClick={setX(id)}` | `onClick={() => setX(id)}` |
 | `:void()` aus einer Fehlermeldung als Code übernommen | Eine Fehlermeldung beschreibt den Fehler, sie ist kein Code |
 | Edit-Button als Save-/Cancel-Button kopiert, `onClick` und Label nicht angepasst | Nach dem Kopieren immer beides prüfen |
@@ -482,13 +482,13 @@ Prüfen: Backend stoppen, Seite neu laden, Backend starten, "Try again" klicken.
 - Ladefehler und Aktionsfehler sind zwei Dinge. Ein Ladefehler ersetzt die Seite (früher `return`), ein Aktionsfehler ist ein State und steht im Haupt-`return`, damit die Liste sichtbar bleibt.
 - Ein `catch` ohne Variable reicht, wenn man einen eigenen Text zeigt. Rohe Fehlertexte (`Failed to fetch`) sind für Nutzer nutzlos.
 - Eine gute Meldung sagt, was passiert ist und was man tun kann, und passt zur Aktion.
-- `setErrMsg("")` gehört in den Erfolgsfall, sonst bleibt die alte Meldung stehen.
-- `setCurrEditTodo(null)` steht nach `await editTodo` im `try`: Bei einem Fehler wird es nie erreicht, der Edit-Modus und der getippte Text bleiben.
+- `setErrorMessage("")` gehört in den Erfolgsfall, sonst bleibt die alte Meldung stehen.
+- `setEditingTodoId(null)` steht nach `await editTodo` im `try`: Bei einem Fehler wird es nie erreicht, der Edit-Modus und der getippte Text bleiben.
 
 | Fehler | Richtig |
 |---|---|
-| `setErrMsg(instanceof Error.message)` | `instanceof` braucht links einen Wert: `fehler instanceof Error` |
-| `setErrMsg(err.message)` außerhalb des `if (err instanceof Error)` | Die Typprüfung gilt nur innerhalb des `if`-Blocks. Mit eigenem Text ist sie unnötig |
+| `setErrorMessage(instanceof Error.message)` | `instanceof` braucht links einen Wert: `fehler instanceof Error` |
+| `setErrorMessage(err.message)` außerhalb des `if (err instanceof Error)` | Die Typprüfung gilt nur innerhalb des `if`-Blocks. Mit eigenem Text ist sie unnötig |
 | Meldung als frühes `return` oben | Das ersetzt die ganze Seite. Die Meldung gehört in den Haupt-`return` |
 | Text "nicht gelöscht" beim Speichern (Copy-Paste) | Meldung passend zur Aktion schreiben |
 | `try/catch` um reine State-Änderungen (Stift-Button) | Nur um Aufrufe, die fehlschlagen können (`await` auf die API) |
@@ -637,7 +637,7 @@ Die Liste ist ein CSS-Grid mit drei Karten pro Reihe (`grid-template-columns: re
 ```tsx
 <form className="input-group mb-4" onSubmit={handleSubmit}>
   <input className="form-control" placeholder="NEW TASK..." aria-label="new todo title" ... />
-  <button className="btn btn-accent" aria-label="add todo" disabled={title.trim() === ""} type="submit">
+  <button className="btn btn-accent" aria-label="add todo" disabled={newTodoTitle.trim() === ""} type="submit">
     <Plus size={18} />
   </button>
 </form>

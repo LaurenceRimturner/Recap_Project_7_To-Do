@@ -4,23 +4,23 @@ import { mutate } from "swr";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
-export default function Form({ title, setTitle, setErrMsg }: FormProps) {
-  const [submitting, setSubmitting] = useState(false);
+export default function Form({ newTodoTitle, setNewTodoTitle, setErrorMessage }: FormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     try {
-      setSubmitting(true);
-      await createTodo(title);
+      setIsSubmitting(true);
+      await createTodo(newTodoTitle);
       await mutate("todos");
-      setTitle("");
-      setErrMsg("");
+      setNewTodoTitle("");
+      setErrorMessage("");
     } catch {
-      setErrMsg(
+      setErrorMessage(
         "Todo konnte nicht hinzugefügt werden. Bitte nochmal versuchen."
       );
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   }
 
@@ -32,13 +32,13 @@ export default function Form({ title, setTitle, setErrMsg }: FormProps) {
         aria-label="new todo title"
         maxLength={50}
         type="text"
-        onChange={(e) => setTitle(e.target.value)}
-        value={title}
+        onChange={(e) => setNewTodoTitle(e.target.value)}
+        value={newTodoTitle}
       />
       <button
         className="btn btn-accent"
         aria-label="add todo"
-        disabled={title.trim() === "" || submitting === true}
+        disabled={newTodoTitle.trim() === "" || isSubmitting === true}
         type="submit"
       >
         <Plus size={18} />
