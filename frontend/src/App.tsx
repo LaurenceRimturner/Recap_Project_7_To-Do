@@ -5,11 +5,16 @@ import Form from "./components/Form/Form";
 import { SquarePen, Trash, Save, X } from "lucide-react";
 
 export default function App() {
-  const { data, error, isLoading, mutate: retry } = useSWR(`todos`, fetchTodos);
-  const [title, setTitle] = useState("");
-  const [currEditTodo, setCurrEditTodo] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState<string>("");
-  const [errMsg, setErrMsg] = useState("");
+  const {
+    data: todos,
+    error,
+    isLoading,
+    mutate: retry,
+  } = useSWR(`todos`, fetchTodos);
+  const [newTodoTitle, setNewTodoTitle] = useState("");
+  const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (isLoading)
     return (
@@ -31,7 +36,7 @@ export default function App() {
         </div>
       </main>
     );
-  if (!data)
+  if (!todos)
     return (
       <main>
         <div className="alert alert-danger" role="alert">
@@ -50,44 +55,48 @@ export default function App() {
     <main>
       <h1>
         Todos
-        <span className="count">{String(data.length).padStart(2, "0")}</span>
+        <span className="count">{String(todos.length).padStart(2, "0")}</span>
       </h1>
-      {errMsg !== "" && (
+      {errorMessage !== "" && (
         <div className="alert alert-danger" role="alert">
-          <p className="status-line">{errMsg}</p>
+          <p className="status-line">{errorMessage}</p>
         </div>
       )}
-      <Form title={title} setTitle={setTitle} setErrMsg={setErrMsg} />
-      {data.length === 0 && (
+      <Form
+        newTodoTitle={newTodoTitle}
+        setNewTodoTitle={setNewTodoTitle}
+        setErrorMessage={setErrorMessage}
+      />
+      {todos.length === 0 && (
         <p className="status-line">
           Noch keine Todos. Erstelle doch eins =^w^=
         </p>
       )}
       <ul className="todo-list list-group">
-        {data.map((todo) => (
+        {todos.map((todo) => (
           <li
             className="todo-item list-group-item d-flex flex-column gap-3"
             key={todo.id}
           >
-            {currEditTodo === todo.id && (
+            {editingTodoId === todo.id && (
               <div className="flex-grow-1">
                 <input
                   type="text"
                   className="form-control form-control-sm"
                   maxLength={50}
-                  value={editTitle}
+                  value={editingTitle}
                   onChange={(e) => {
-                    setEditTitle(e.target.value);
+                    setEditingTitle(e.target.value);
                   }}
                 />
-                {editTitle.trim() === "" && (
+                {editingTitle.trim() === "" && (
                   <p className="text-danger small mb-0 mt-1">
                     Gültige Aufgabe einfügen.
                   </p>
                 )}
               </div>
             )}
-            {currEditTodo !== todo.id ? (
+            {editingTodoId !== todo.id ? (
               <>
                 <label
                   className={`todo-title form-check-label ${
@@ -101,9 +110,9 @@ export default function App() {
                       try {
                         await editTodo(todo.id, todo.title, !todo.done);
                         await mutate("todos");
-                        setErrMsg("");
+                        setErrorMessage("");
                       } catch {
-                        setErrMsg(
+                        setErrorMessage(
                           "Todo konnte nicht bearbeitet werden. Bitte nochmal versuchen."
                         );
                       }
@@ -118,9 +127,9 @@ export default function App() {
                     className="btn btn-sm btn-outline-secondary"
                     aria-label={`edit todo: ${todo.title}`}
                     onClick={() => {
-                      setCurrEditTodo(todo.id);
-                      setEditTitle(todo.title);
-                      setErrMsg("");
+                      setEditingTodoId(todo.id);
+                      setEditingTitle(todo.title);
+                      setErrorMessage("");
                     }}
                   >
                     <SquarePen size={16} />
@@ -134,16 +143,16 @@ export default function App() {
                   className="btn btn-sm btn-accent"
                   aria-label={`save todo: ${todo.title}`}
                   onClick={async () => {
-                    if (editTitle.trim() === "") {
+                    if (editingTitle.trim() === "") {
                       return;
                     }
                     try {
-                      await editTodo(todo.id, editTitle, todo.done);
+                      await editTodo(todo.id, editingTitle, todo.done);
                       await mutate("todos");
-                      setCurrEditTodo(null);
-                      setErrMsg("");
+                      setEditingTodoId(null);
+                      setErrorMessage("");
                     } catch {
-                      setErrMsg(
+                      setErrorMessage(
                         "Todo konnte nicht gespeichert werden. Bitte nochmal versuchen."
                       );
                     }
@@ -156,7 +165,7 @@ export default function App() {
                   className="btn btn-sm btn-outline-secondary"
                   aria-label={`cancel todo changes on ${todo.title}`}
                   onClick={() => {
-                    setCurrEditTodo(null);
+                    setEditingTodoId(null);
                   }}
                 >
                   <X size={16} />
@@ -169,9 +178,9 @@ export default function App() {
                     try {
                       await deleteTodo(todo.id);
                       await mutate("todos");
-                      setErrMsg("");
+                      setErrorMessage("");
                     } catch {
-                      setErrMsg(
+                      setErrorMessage(
                         "Todo konnte nicht gelöscht werden. Bitte nochmal versuchen."
                       );
                     }
