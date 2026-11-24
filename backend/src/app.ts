@@ -11,7 +11,7 @@ try {
 }
 
 // The React app runs on another origin (http://localhost:5173), so the browser needs CORS headers.
-app.use(cors({ origin: process.env.CORS_ORIGIN! }));
+app.use(cors({ origin: process.env.CORS_ORIGIN ?? "http://localhost:5173" }));
 app.use(express.json());
 
 app.get("/api/health", (_request, response) => {
