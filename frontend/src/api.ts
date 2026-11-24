@@ -3,7 +3,7 @@ import type { Todo, Filter } from "./types";
 // Put all functions that talk to the API here (fetcher for `useSWR`, create, update, delete),
 // so that your components never call `fetch` themselves.
 
-export const API_URL = "http://localhost:3001/api";
+export const API_URL = import.meta.env.VITE_API_URL;
 export const fetchTodos = async (filter: Filter): Promise<Todo[]> => {
   let query = "";
   if (filter === "open") {
