@@ -14,3 +14,5 @@ export type FormProps = {
   setNewTodoTitle: (title: string) => void;
   setErrorMessage: (message: string) => void;
 };
+
+export type Filter = "all" | "open" | "done";

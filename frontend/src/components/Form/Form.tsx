@@ -4,7 +4,11 @@ import { mutate } from "swr";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
-export default function Form({ newTodoTitle, setNewTodoTitle, setErrorMessage }: FormProps) {
+export default function Form({
+  newTodoTitle,
+  setNewTodoTitle,
+  setErrorMessage,
+}: FormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -12,7 +16,7 @@ export default function Form({ newTodoTitle, setNewTodoTitle, setErrorMessage }:
     try {
       setIsSubmitting(true);
       await createTodo(newTodoTitle);
-      await mutate("todos");
+      await mutate((key) => Array.isArray(key) && key[0] === "todos");
       setNewTodoTitle("");
       setErrorMessage("");
     } catch {
