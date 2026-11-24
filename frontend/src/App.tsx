@@ -31,7 +31,7 @@ export default function App() {
         >
           failed to load
           <button
-            className="btn btn-sm btn-outline-secondary"
+            className="btn btn-sm btn-accent"
             onClick={() => retry()}
           >
             Try again
@@ -48,7 +48,7 @@ export default function App() {
         >
           an error has occurred
           <button
-            className="btn btn-sm btn-outline-secondary"
+            className="btn btn-sm btn-accent"
             onClick={() => retry()}
           >
             Try again
