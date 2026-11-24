@@ -14,9 +14,21 @@ export const todosRouter = Router();
 // The contract is in docs/api-contract.md at the root of the project.
 
 todosRouter.get("/", async (request, response) => {
-  const todos = await todoModel.find();
+  const done = request.query.done;
+  const filter: { done?: boolean } = {};
+  if (done === "true") {
+    filter.done = true;
+  }
+  if (done === "false") {
+    filter.done = false;
+  }
+  const todos = await todoModel.find(filter);
   response.json(todos.map(toTodo));
 });
+// todosRouter.get("/", async (request, response) => {
+//   const todos = await todoModel.find();
+//   response.json(todos.map(toTodo));
+// });
 
 todosRouter.post("/", async (request, response) => {
   const newTodo = await todoModel.create(request.body);

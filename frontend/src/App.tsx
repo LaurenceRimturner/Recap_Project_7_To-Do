@@ -1,16 +1,20 @@
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { editTodo, fetchTodos, deleteTodo } from "./api";
 import { useState } from "react";
 import Form from "./components/Form/Form";
 import { SquarePen, Trash, Save, X } from "lucide-react";
+import type { Filter } from "./types";
 
 export default function App() {
+  const [filter, setFilter] = useState<Filter>("all");
   const {
     data: todos,
     error,
     isLoading,
     mutate: retry,
-  } = useSWR(`todos`, fetchTodos);
+  } = useSWR([`todos`, filter], ([, currentFilter]) =>
+    fetchTodos(currentFilter)
+  );
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState<string>("");
@@ -57,6 +61,29 @@ export default function App() {
         Todos
         <span className="count">{String(todos.length).padStart(2, "0")}</span>
       </h1>
+      <div className="btn-group mb-3" role="group" aria-label="Filter">
+        <button
+          className={`btn btn-sm ${filter === "all" ? "btn-accent" : "btn-outline-secondary"}`}
+          onClick={() => setFilter("all")}
+          type="button"
+        >
+          All
+        </button>
+        <button
+          className={`btn btn-sm ${filter === "open" ? "btn-accent" : "btn-outline-secondary"}`}
+          onClick={() => setFilter("open")}
+          type="button"
+        >
+          Open
+        </button>
+        <button
+          className={`btn btn-sm ${filter === "done" ? "btn-accent" : "btn-outline-secondary"}`}
+          onClick={() => setFilter("done")}
+          type="button"
+        >
+          Done
+        </button>
+      </div>
       {errorMessage !== "" && (
         <div className="alert alert-danger" role="alert">
           <p className="status-line">{errorMessage}</p>
@@ -69,7 +96,11 @@ export default function App() {
       />
       {todos.length === 0 && (
         <p className="status-line">
-          Noch keine Todos. Erstelle doch eins =^w^=
+          {filter === "all"
+            ? "Noch keine Todos. Erstelle doch eins ඞ"
+            : filter === "open"
+              ? "Keine offenen Todos."
+              : "Noch nichts erledigt."}
         </p>
       )}
       <ul className="todo-list list-group">
@@ -114,7 +145,7 @@ export default function App() {
                     onChange={async () => {
                       try {
                         await editTodo(todo.id, todo.title, !todo.done);
-                        await mutate("todos");
+                        await retry();
                         setErrorMessage("");
                       } catch {
                         setErrorMessage(
@@ -153,7 +184,7 @@ export default function App() {
                     }
                     try {
                       await editTodo(todo.id, editingTitle, todo.done);
-                      await mutate("todos");
+                      await retry();
                       setEditingTodoId(null);
                       setErrorMessage("");
                     } catch {
@@ -182,7 +213,7 @@ export default function App() {
                   onClick={async () => {
                     try {
                       await deleteTodo(todo.id);
-                      await mutate("todos");
+                      await retry();
                       setErrorMessage("");
                     } catch {
                       setErrorMessage(

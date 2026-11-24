@@ -1,11 +1,18 @@
-import type { Todo } from "./types";
+import type { Todo, Filter } from "./types";
 // The backend allows requests from http://localhost:5173 (CORS), so the frontend can call it directly.
 // Put all functions that talk to the API here (fetcher for `useSWR`, create, update, delete),
 // so that your components never call `fetch` themselves.
 
 export const API_URL = "http://localhost:3001/api";
-export const fetchTodos = async (): Promise<Todo[]> => {
-  const response = await fetch(API_URL + "/todos");
+export const fetchTodos = async (filter: Filter): Promise<Todo[]> => {
+  let query = "";
+  if (filter === "open") {
+    query = "?done=false";
+  }
+  if (filter === "done") {
+    query = "?done=true";
+  }
+  const response = await fetch(API_URL + "/todos" + `${query}`);
   if (!response.ok) {
     throw new Error("Todos konnten nicht geladen werden");
   }
